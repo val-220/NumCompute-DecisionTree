@@ -13,6 +13,59 @@ appropriately.
 """
 import numpy as np
 
+class StreamStats:
+    def __init__(self):
+        self.mean = 0.0  # running mean
+        self.var = 0.0  # running variance
+        self.M2 = 0.0   # running sum of squared deviations
+        self.count = 0 # cumulative items processed from previous chunks
+    
+    def update_chunks(self, chunk_x):
+        """
+           Takes in a 1D NumpyArray and updates mean and variance using Welford's 
+           Algorithm and Chan et al's Parallel Algorithm 
+           https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+
+           Parameters:
+              self: Existing chunk/s that have already been processed
+              chunk_x: the next chunk to be processed
+            
+            Raises:
+
+            Returns:
+                Running mean and variance
+
+            Time Complexity:
+
+            Space Complexity:
+        """
+        if chunk_x.size == 0:
+            return
+        else:
+            n_b = len(chunk_x)  # items in the next chunk to be processed, chunk_x
+
+        mean_b = np.mean(chunk_x)
+
+
+        total_n = self.count + n_b  
+
+        delta = mean_b - self.mean 
+
+        M2_b = np.sum((chunk_x - mean)**2)
+
+        # mean and variance
+        self.mean = self.mean + delta * n_b/total_n
+        self.M2 = M2_b + (delta ** 2) * (self.count * n_b / total_n)
+        self.var = self.M2 / (total_n - 1)
+
+        self.count = total_n
+
+    def stan_dev(self) -> float:
+        return np.sqrt(self.var)
+        
+
+
+
 def mean(data, axis=0):
     """
         Calculates the stastical mean for the inputed data
