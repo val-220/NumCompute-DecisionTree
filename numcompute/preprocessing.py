@@ -43,6 +43,12 @@ class StandardScaler:
       - `fit_transform(X) -> X_out`: fits the transformer to X, then
          transforms using the learned state.
     """
+    def __init__(self):
+        self._stats = StreamStats()
+        self.mean_ = None
+        self.var_ = None
+        self.scale_ = None
+        self.count = 0
 
     def partial_fit(self, X):
         """
@@ -68,16 +74,18 @@ class StandardScaler:
 
         Space Complexity:
             O(f) for the stored statistics.
-        """
-        
+        """ 
         X = check_array(X)
-        stats = StreamStats()
         self.n_features_in_ = X.shape[1]
+        
+        self._stats.update_chunks(X)
 
-        self.mean_ = stats.update_chunks(X)
-        scale = stats.chunk_stan_dev()
+        self.mean_ = self._stats.mean
+        self.var_ = self._stats.var
         # Avoid division by zero for constant features
-        self.scale_ = np.where(np.isclose(scale, 0), 1.0, scale)
+        self.scale_ = self._stats.chunk_stan_dev()
+
+        self.count = self._stats.count
         
         return self
 

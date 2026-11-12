@@ -43,7 +43,7 @@ class StreamStats:
         if chunk_x.size == 0:
             return
         else:
-            n_b = len(chunk_x)  # items in the next chunk to be processed, chunk_x
+            n_b = chunk_x.shape[0]  # items in the next chunk to be processed, chunk_x
 
         mean_b = np.mean(chunk_x, axis=0)
 
@@ -53,6 +53,13 @@ class StreamStats:
 
         M2_b = np.sum((chunk_x - mean_b) ** 2, axis=0)
 
+        if self.count == 0:
+            self.count = n_b
+            self.mean = mean_b
+            self.M2 = M2_b
+            self.var = self.M2 / self.count
+            return self
+            
         # mean and variance
         self.mean = self.mean + delta * n_b/total_n
         self.M2 = self.M2 + M2_b + (delta ** 2) * (self.count * n_b / total_n)
@@ -65,7 +72,8 @@ class StreamStats:
     def chunk_stan_dev(self) -> float:
         print("DEBUG self.var:", repr(self.var), type(self.var))
         stan_dev = np.sqrt(self.var)
-        return np.where(std == 0.0, 1.0, std)
+        return np.where(stan_dev == 0.0, 1.0, stan_dev)
+    
 class StreamQuantileP2:
     def __init__(self):
         self.p = p # probability
