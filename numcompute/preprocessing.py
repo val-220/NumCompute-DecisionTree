@@ -37,6 +37,9 @@ class StandardScaler:
       - `fit(X) -> self`: calculates and stores the mean and standard
          deviation per feature.
 
+      - `partial_fit(X) -> self`: computes the per-feature mean and standard deviation 
+         via a running mean/variance using Welford's Algorithm for streaming
+
       - `transform(X) -> X_out`: Uses the stored values from fit(X) to
          standardise data.
 
