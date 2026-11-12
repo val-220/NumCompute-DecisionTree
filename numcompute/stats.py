@@ -38,32 +38,59 @@ class StreamStats:
             Time Complexity:
 
             Space Complexity:
+
         """
         if chunk_x.size == 0:
             return
         else:
             n_b = len(chunk_x)  # items in the next chunk to be processed, chunk_x
 
-        mean_b = np.mean(chunk_x)
-
+        mean_b = np.mean(chunk_x, axis=0)
 
         total_n = self.count + n_b  
 
         delta = mean_b - self.mean 
 
-        M2_b = np.sum((chunk_x - mean)**2)
+        M2_b = np.sum((chunk_x - mean_b) ** 2, axis=0)
 
         # mean and variance
         self.mean = self.mean + delta * n_b/total_n
-        self.M2 = M2_b + (delta ** 2) * (self.count * n_b / total_n)
-        self.var = self.M2 / (total_n - 1)
+        self.M2 = self.M2 + M2_b + (delta ** 2) * (self.count * n_b / total_n)
+        self.var = self.M2 / total_n
 
         self.count = total_n
+    
+        return self 
 
-    def stan_dev(self) -> float:
-        return np.sqrt(self.var)
+    def chunk_stan_dev(self) -> float:
+        print("DEBUG self.var:", repr(self.var), type(self.var))
+        stan_dev = np.sqrt(self.var)
+        return np.where(std == 0.0, 1.0, std)
+class StreamQuantileP2:
+    def __init__(self):
+        self.p = p # probability
+        self.n = np.arange(1,6)  # marker positions
+        self.q_heights = np.zeros(5, dtype=np.float64) # q/marker heights 
+        self.n_positions = np.array([1, 1 + 2*p, 1 + 4*p, 3 + 2*p, 5], dtype=np.float64) # marker desired positions 
+        self.dn = np.array([0, p/2, p, (1 + p)/2, 1], dtype=np.float64) # precalculated increments of desired positions added to current values after each  observation
         
+        self.count = 0 # cumulative items processed from previous chunks
+        self.buffer = []
 
+    def update_chunks(self, chunk_x, q): # Using P2 Algorithm
+                # initializing values
+        p = self.p
+        n = self.n
+        q_heights = self.q_heights
+        n_positions = self.n_positions
+        dn = self.dn
+        count = self.count
+        
+        if chunk_x.size == 0:
+            return
+        else:
+            total_items = len(chunk_x)
+        
 
 
 def mean(data, axis=0):

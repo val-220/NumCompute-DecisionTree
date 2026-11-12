@@ -25,6 +25,7 @@ Implementation requirements:
 import numpy as np
 
 from numcompute.utils import check_array, check_is_fitted
+from numcompute.stats import StreamStats
 
 
 class StandardScaler:
@@ -42,6 +43,43 @@ class StandardScaler:
       - `fit_transform(X) -> X_out`: fits the transformer to X, then
          transforms using the learned state.
     """
+
+    def partial_fit(self, X):
+        """
+        Computes the per-feature mean and standard deviation via a
+        running mean/variance using Welford's Algorithm
+
+        Constant features get a scale of 1, so they become all zeros
+        after transform instead of dividing by zero.
+
+        Parameters:
+            X:
+                2D array-like of shape (n_samples, n_features).
+
+        Returns:
+            self, with mean_, scale_ and n_features_in_ set.
+
+        Raises:
+            TypeError, ValueError:
+                If X is not a valid 2D numeric array (see check_array).
+
+        Time Complexity:
+            O(n * f) for n samples and f features.
+
+        Space Complexity:
+            O(f) for the stored statistics.
+        """
+        
+        X = check_array(X)
+        stats = StreamStats()
+        self.n_features_in_ = X.shape[1]
+
+        self.mean_ = stats.update_chunks(X)
+        scale = stats.chunk_stan_dev()
+        # Avoid division by zero for constant features
+        self.scale_ = np.where(np.isclose(scale, 0), 1.0, scale)
+        
+        return self
 
     def fit(self, X):
         """
