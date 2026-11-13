@@ -16,7 +16,7 @@ vectorisation and numerical stability.
 
 import numpy as np
 
-from numcompute.exceptions import NotFittedError
+from numcompute_stream.exceptions import NotFittedError
 
 
 def check_array(X, dtype=float, allow_nan=False):

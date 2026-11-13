@@ -29,8 +29,6 @@ class StreamStats:
            Parameters:
               self: Existing chunk/s that have already been processed
               chunk_x: the next chunk to be processed
-            
-            Raises:
 
             Returns:
                 Running mean and variance
@@ -238,9 +236,10 @@ def stan_dev(data,axis=0):
     """ 
     return np.nanstd(data,axis)
 
-def min(data, axis=0):
+def min_stream(chunk_x, axis=0):
+    self.current = np.inf
     """
-        Calculates the min for the inputed data
+        Calculates the min for the inputed chunk data, updates with new batches
 
         Parameters:
             data: a numpy array containing the data to calculate the min of
@@ -258,19 +257,26 @@ def min(data, axis=0):
         Space Complexity:
             O(n) where n is the number of elements of the data
     """ 
-    return np.nanmin(data,axis)
+    chunk_running_min = np.minimum.accumulate(chunk_x)
 
-def max(data, axis=0):
+    updated_min = np.minimum(chunk_running_min, self.current_min)
+
+    self.current = chunk_running_min[-1]
+    return updated_min
+
+
+def max_stream(chunk_x, axis=0):
+    self.current = -np.inf
     """
-        Calculates the stastical max for the inputed data
+        Calculates the min for the inputed chunk data, updates with new batches
 
         Parameters:
-            data: a numpy array containing the data to calculate the max of
+            data: a numpy array containing the data to calculate the min of
             axis: the axis to operate on, defaults to 0
             
 
         Returns:
-            A scalar or an array containing the resulting maxs
+            A scalar or an array containing the resulting mins
 
         Raises:
         
@@ -280,7 +286,12 @@ def max(data, axis=0):
         Space Complexity:
             O(n) where n is the number of elements of the data
     """ 
-    return np.nanmax(data, axis)
+    chunk_running_max = np.maximum.accumulate(chunk_x)
+
+    updated_max = np.maximum(chunk_running_min, self.current_min)
+
+    self.current = chunk_running_max[-1]
+    return updated_max
 
 def histogram(data, bins=10):
     """
