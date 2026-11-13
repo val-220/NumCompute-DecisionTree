@@ -75,29 +75,102 @@ class StreamStats:
         return np.where(stan_dev == 0.0, 1.0, stan_dev)
     
 class StreamQuantileP2:
-    def __init__(self):
-        self.p = p # probability
+    def __init__(self, p):
+        self.p = p # percentile
         self.n = np.arange(1,6)  # marker positions
+        self.n_positions = np.array([1, 1 + 2*p, 1 + 4*p, 3 + 2*p, 5], dtype=np.float64) # marker desired positions (ns)
+        self.dns = np.array([0, p/2, p, (1 + p)/2, 1], dtype=np.float64) # precalculated increments of desired positions added to current values after each  observation
         self.q_heights = np.zeros(5, dtype=np.float64) # q/marker heights 
-        self.n_positions = np.array([1, 1 + 2*p, 1 + 4*p, 3 + 2*p, 5], dtype=np.float64) # marker desired positions 
-        self.dn = np.array([0, p/2, p, (1 + p)/2, 1], dtype=np.float64) # precalculated increments of desired positions added to current values after each  observation
         
         self.count = 0 # cumulative items processed from previous chunks
-        self.buffer = []
+        self.obs = [] # first 5 observations
+    
+    def update_chunks(self, chunk_x):
+        for x in chunk_x:
+            self.add(x)
+        return self
 
-    def update_chunks(self, chunk_x, q): # Using P2 Algorithm
-                # initializing values
+    
+    def add(self, x): # Using P2 Algorithm on a single observation
+        
+        # initializing values
         p = self.p
         n = self.n
         q_heights = self.q_heights
         n_positions = self.n_positions
-        dn = self.dn
+        dns = self.dns
         count = self.count
         
-        if chunk_x.size == 0:
-            return
+        if len(self.q_heights) <5:
+            self.q_heights.append(x)
+            self.q_heights = sorted(self.q_heights)
+            return self
+
+        # Step 1 of the Algorithm
+        if x<= self.q_heights[0]:
+            self.q_heights[0] = x # new minimum
+            k = 0
+        elif x >= self.q_heights[4]:
+            self.q_heights[4] = x
+            k = 3
+        elif x < self.q_heights[1]:
+            k = 0
+        elif x < self.q_heights[2]:
+            k = 1
+        elif x < self.q_heights[3]:
+            k = 2 
+        elif x < self.q_heights[4]:
+            k = 3
         else:
-            total_items = len(chunk_x)
+            raise Exception("All cases should have been covered")
+
+        # Step 2 of the Algorithm, increment position of markers k+1 through 5
+        # Update desired positions for all markers
+        for i in range(k+1, 5):
+            self.n[i] += 1
+        for i in range (5):
+            self.n_positions[i] += self.dns[i]
+
+        # Step 3 Things between minimum and max
+        for i in (1,2,3):
+            d = self.n_positions[i] - self.n[i]
+            if (d >= 1 and self.n[i + 1] - n[i] > 1) or (d <= -1 and self.n[i - 1] - self.n[i] < -1):
+                # select d to be the sign
+                d_sign = 1 if d > 0 else -1
+                # Condition to check whether we use parabolic or linear  equation
+                q_para = self._parabolic(i, d_sign)
+                if (self.q_heights[i-1] < q_para) and (q_para < self.q_heights[i+1]):
+                    self.q_heights[i] = q_para
+                else:
+                    self.q_heights[i] = self._linear(i, d_sign)
+                self.n[i] +=d_sign
+        
+    def score(self):
+        if self.p == 0:
+            return self.q_heights[0]
+        elif self.p == 1:
+            return self.q_heights[4]
+
+        # selecting an index that's closest to the desired percentile
+        elif len(self.q_heights ) < 5:
+            index = int(len(self.q_heights) * self.p) 
+            return self.q_heights[index]
+
+        return self.q_heights[2]    
+    
+    def _parabolic(self, i:int, d: double) -> float:
+            q, n = self.q_heights, self.n
+            
+            return q[i] + d / (n[i + 1] - n[i - 1]) * (
+            (n[i] - n[i - 1] + d) * (q[i + 1] - q[i]) / (n[i + 1] - n[i])
+            + (n[i + 1] - n[i] - d) * (q[i] - q[i - 1]) / (n[i] - n[i - 1])
+        )
+    
+    def _linear(self, i:int, d: int) -> float:
+        q, n = self.q_heights, self.n
+        return q[i] + d * (q[i + d] - q[i]) / (n[i + d] - n[i])
+
+
         
 
 
