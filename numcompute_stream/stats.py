@@ -73,6 +73,9 @@ class StreamStats:
         return np.where(stan_dev == 0.0, 1.0, stan_dev)
     
 class StreamQuantileP2:
+    """ Implements streaming quantiles by using the P2 Algorithm
+    https://dl.acm.org/doi/epdf/10.1145/4372.4378 """
+    
     def __init__(self, p):
         self.p = p # percentile
         self.n = np.arange(1,6)  # marker positions
@@ -120,7 +123,7 @@ class StreamQuantileP2:
         elif x < self.q_heights[4]:
             k = 3
         else:
-            raise Exception("All cases should have been covered")
+            raise Exception("Step 1 of the algorithm has produced an invalid result, cannot compute k")
 
         # Step 2 of the Algorithm, increment position of markers k+1 through 5
         # Update desired positions for all markers
@@ -130,7 +133,7 @@ class StreamQuantileP2:
             self.n_positions[i] += self.dns[i]
 
         # Step 3 Things between minimum and max
-        for i in (1,2,3):
+        for i in range(1,4):
             d = self.n_positions[i] - self.n[i]
             if (d >= 1 and self.n[i + 1] - n[i] > 1) or (d <= -1 and self.n[i - 1] - self.n[i] < -1):
                 # select d to be the sign
@@ -293,9 +296,9 @@ def max_stream(chunk_x, axis=0):
     self.current = chunk_running_max[-1]
     return updated_max
 
-def histogram(data, bins=10):
+class StreamHistogram():
     """
-        Groups the data into the chosen number of bins
+        Groups the data into the chosen number of bins, uses a decay to implement streaming
 
         Parameters:
             data: a numpy array containing the data to group

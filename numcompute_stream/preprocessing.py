@@ -175,7 +175,7 @@ class StandardScaler:
 class MinMaxScaler:
     """
     Scales numerical data by mapping features into a specified range, using
-    the minimum and maximum of each feature.
+    the minimum and maximum of each feature. 
 
     APIs implemented:
       - `fit(X) -> self`: stores the minimum and maximum of each feature to
