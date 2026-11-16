@@ -24,8 +24,8 @@ Implementation requirements:
 
 import numpy as np
 
-from numcompute.utils import check_array, check_is_fitted
-from numcompute.stats import StreamStats
+from numcompute_stream.utils import check_array, check_is_fitted
+from numcompute_stream.stats import StreamStats
 
 
 class StandardScaler:
@@ -239,6 +239,40 @@ class MinMaxScaler:
 
         return self
 
+
+    def partial_fit(self, X):
+        """
+        Computes the per-feature minimum, maximum and range via streaming.
+
+        Parameters:
+            X:
+                2D array-like of shape (n_samples, n_features).
+
+        Returns:
+            self, with data_min_, data_max_, data_range_ and
+            n_features_in_ set.
+
+        Raises:
+            TypeError, ValueError:
+                If X is not a valid 2D numeric array (see check_array).
+
+        Time Complexity:
+            O(n * f) for n samples and f features.
+
+        Space Complexity:
+            O(f) for the stored statistics.
+        """
+
+        X = check_array(X)
+
+        self.n_features_in_ = X.shape[1]
+        self.data_min_ = np.min(X, axis=0)
+        self.data_max_ = np.max(X, axis=0)
+        
+        self.data_range_ = self.data_max_ - self.data_min_
+
+        return self
+
     def transform(self, X):
         """
         Scales X into feature_range using the values learned in fit.
@@ -317,6 +351,7 @@ class OneHotEncoder:
                 What transform does with categories not seen in fit.
                 "error" (default) raises a ValueError; "ignore" encodes
                 them as all zeros.
+            collection: Stores a running list of category items
 
         Raises:
             ValueError:
@@ -329,6 +364,7 @@ class OneHotEncoder:
             )
 
         self.handle_unknown = handle_unknown
+
 
     def fit(self, X):
         """
@@ -357,9 +393,50 @@ class OneHotEncoder:
         X = check_array(X, dtype=None)
 
         self.n_features_in_ = X.shape[1]
+        
+        self.categories_ = [(chunk_x[:, j]) for j in range(X.shape[1])]
 
-        self.categories_ = [np.unique(X[:, j]) for j in range(X.shape[1])]
+        return self
 
+    def partial_fit(self, chunk_x):
+        """
+        Learns the sorted unique categories of each feature.
+
+        Parameters:
+            chunk_X:
+                2D array-like of shape (n_samples, n_features). Strings
+                and numbers are both accepted.
+
+        Returns:
+            self, with categories_ (one array per feature) and
+            n_features_in_ set.
+
+        Raises:
+            TypeError, ValueError:
+                If X is not a valid 2D array (see check_array).
+
+        Time Complexity:
+            O(n log n * f) for n samples and f features (sorting).
+
+        Space Complexity:
+            O(k) where k is the total number of categories.
+        """
+
+        chunk_x = check_array(chunk_x, dtype=None)
+
+        if self.categories_ == None:
+            self.n_features_in_ = chunk_x.shape[1]
+            self.categories_= [np.unique(chunk_x[:, j]) for j in range(chunk_x.shape[1])]
+        
+        elif chunk_x.shape[1] == self.n_features_in_:
+            self.categories_ = [np.union1d(self.categories_[j], chunk_x[:,j]) for j in range(chunk_x.shape[1])]
+
+        else:
+            raise ValueError(
+                    f"X has {chunk_x.shape[1]} features, but OneHotEncoder was "
+                    f"fitted with {self.n_features_in_}."
+            )
+            
         return self
 
     def transform(self, X):
@@ -424,7 +501,13 @@ class OneHotEncoder:
         """
 
         return self.fit(X).transform(X)
+    
+    def partial_fit_transform(self, X):
+        """
+        Fits to X, then transforms it. Same as fit_transform but built for streaming.
+        """
 
+        return self.partial_fit(X).transform(X)
 
 class SimpleImputer:
     """
@@ -456,9 +539,62 @@ class SimpleImputer:
 
         self.fill_value = fill_value
 
+
+
+    def reset(self):
+        """
+        Resets and preserves hyperparameters, needed if working on a new dataset
+
+        Time Complexity:
+            O(1) for deleting the n_features_in_
+
+        Space Complexity:
+            O(1).
+        """
+        if isinstance(self, "n_features_in_"):
+            del self.n_features_in_
+        return self
+
+    def partial_fit(self,chunk_x):
+        """
+        Records the number of features chunk by chunk, builds up a state with each call.
+
+        Parameters:
+            chunk_x:
+                A chunk of a 2D array-like of shape (n_samples, n_features). May contain
+                NaN.
+
+        Returns:
+            self, with n_features_in_ set.
+
+        Raises:
+            TypeError, ValueError:
+                If X is not a valid 2D numeric array (see check_array).
+                If the chunk clearly is not of the same stream/fit.
+
+        Time Complexity:
+            O(n * f) for n samples and f features (input validation).
+
+        Space Complexity:
+            O(1).
+        """
+        chunk_x = check_array(X, allow_nan=True)
+        if self.n_features_in_ == None:
+            self.n_features_in_ = chunk_x.shape[1]
+        
+        if chunk_x.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"chunk_x has {X.shape[1]} features, but SimpleImputer was "
+                f"fitted with {self.n_features_in_}."
+            )
+
+        return self
+
+
     def fit(self, X):
         """
-        Records the number of features in X.
+        Records the number of features in X without streaming by simply calling the chunking code, resetting
+        and treating it as the first chunk of a new stream.
 
         Parameters:
             X:
@@ -479,11 +615,8 @@ class SimpleImputer:
             O(1).
         """
 
-        X = check_array(X, allow_nan=True)
 
-        self.n_features_in_ = X.shape[1]
-
-        return self
+        return self.reset().partial_fit(X)
 
     def transform(self, X):
         """

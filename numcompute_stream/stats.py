@@ -74,7 +74,11 @@ class StreamStats:
     
 class StreamQuantileP2:
     """ Implements streaming quantiles by using the P2 Algorithm
-    https://dl.acm.org/doi/epdf/10.1145/4372.4378 """
+    https://dl.acm.org/doi/epdf/10.1145/4372.4378 
+
+    Jain, R., & Chlamtac, I. (1985). The P^2 algorithm for dynamic calculation of quantiles and histograms without 
+    storing observations. Communications of the ACM, 28(10), 1076–1085. https://doi.org/10.1145/4372.4378
+    """
     
     def __init__(self, p):
         self.p = p # percentile
@@ -132,7 +136,7 @@ class StreamQuantileP2:
         for i in range (5):
             self.n_positions[i] += self.dns[i]
 
-        # Step 3 Things between minimum and max
+        # Step 3 between minimum and max, adjust heights for markers 2-4
         for i in range(1,4):
             d = self.n_positions[i] - self.n[i]
             if (d >= 1 and self.n[i + 1] - n[i] > 1) or (d <= -1 and self.n[i - 1] - self.n[i] < -1):
@@ -298,18 +302,19 @@ def max_stream(chunk_x, axis=0):
 
 class StreamHistogram():
     """
-        Groups the data into the chosen number of bins, uses a decay to implement streaming
+        Groups the data into the chosen number of bins, uses the following algorithm to implement streaming:
+        https://jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
 
-        Parameters:
-            data: a numpy array containing the data to group
-            bins: the number of bins to group the data into or an array of the bins
-            
+        Basic structure inspired by:
+        https://github.com/carsonfarmer/streamhist/blob/master/streamhist/histogram.py
 
-        Returns:
-            array of the values of the histogram
-            bin_edges: the edges of the bin
 
-        Raises:
+        Attributes:
+            maxbins: the number of bins to group the data into 
+            p:  centroids, kept sorted
+            m:  the list of bin counts
+            total: total number of datapoints for which the histogram has seen.
+
         
         Time Complexity:
             O(bn) where n is the number of elements of the data and b is the number of bins
@@ -317,7 +322,33 @@ class StreamHistogram():
         Space Complexity:
             O(n) where n is the number of elements of the data
     """
-    return np.histogram(data[~np.isnan(data)],bins)
+
+    def __init__ (self, bins=64):
+        """Initializes the histogram.
+
+        Args: 
+            bins: maximum number of bins to group the data into.
+        
+        """
+        self.maxbins = maxbins
+        self.p = []   # centroids, kept sorted
+        self.m = []   # counts
+        self.total
+
+
+
+    def update(self, x):
+        """
+        Updates the histogram with a new value
+
+         Args:
+            x: A point on the histogram
+
+        Raises:
+            
+        """
+        for i
+
 
 def quantile(data, q):
     """
