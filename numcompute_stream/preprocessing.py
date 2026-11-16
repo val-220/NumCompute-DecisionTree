@@ -394,7 +394,7 @@ class OneHotEncoder:
 
         self.n_features_in_ = X.shape[1]
         
-        self.categories_ = [(chunk_x[:, j]) for j in range(X.shape[1])]
+        self.categories_ = [np.unique(X[:, j]) for j in range(X.shape[1])]
 
         return self
 
