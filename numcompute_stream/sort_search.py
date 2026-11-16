@@ -6,7 +6,7 @@ a manual quickselect implementation, and a binary search for locating
 values or finding their insertion position in sorted arrays. 
 """
 import numpy as np
-from numcompute.utils import check_array, check_1d_array
+from numcompute_stream.utils import check_array, check_1d_array
 # SORTING
 def stable_sort(values):
     """

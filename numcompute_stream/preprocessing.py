@@ -424,7 +424,7 @@ class OneHotEncoder:
 
         chunk_x = check_array(chunk_x, dtype=None)
 
-        if self.categories_ == None:
+        if not hasattr(self.categories_):
             self.n_features_in_ = chunk_x.shape[1]
             self.categories_= [np.unique(chunk_x[:, j]) for j in range(chunk_x.shape[1])]
         

@@ -38,10 +38,9 @@ from .stats import (
     mean, 
     median, 
     stan_dev, 
-    min,
-    max, 
+    min_stream,
+    max_stream, 
     quantile, 
-    histogram,
 )
 
 from .metrics import (

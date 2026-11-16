@@ -13,7 +13,7 @@ midpoint interpolations.
 """
 import numpy as np
 
-from numcompute.utils import check_1d_array
+from numcompute_stream.utils import check_1d_array
 
 RANK_METHODS = ("average", "ordinal", "dense")
 INTERPOLATIONS = ("linear", "lower", "higher", "midpoint")

@@ -347,7 +347,7 @@ class StreamHistogram():
         Raises:
             
         """
-        for i
+    
 
 
 def quantile(data, q):
