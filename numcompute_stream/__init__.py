@@ -44,11 +44,7 @@ from .stats import (
 )
 
 from .metrics import (
-    accuracy, 
-    precision, 
-    recall, 
-    f1score, 
-    confusion_matrix, 
+    StreamMetrics,
     MSE,
 )
 
