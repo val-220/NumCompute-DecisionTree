@@ -115,11 +115,11 @@ def topk(values, k, largest=True, return_indices=True):
             return_indices: Boolean to specify if the function returns an
                 array of indices of selected values, if True, or values
                 themselves, if False. Defaults to True.
-        
+
         Returns:
             A NumPy array containing either the selected values or their
             indices.
-        
+
         Raises:
             ValueError: 
                 If array is empty, not one-dimensional, contains NaN or Inf,

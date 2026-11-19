@@ -45,7 +45,6 @@ from .stats import (
 
 from .metrics import (
     StreamMetrics,
-    MSE,
 )
 
 from .pipeline import Pipeline

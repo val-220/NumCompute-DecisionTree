@@ -24,8 +24,8 @@ Implementation requirements:
 
 import numpy as np
 
-from numcompute_stream.utils import check_array, check_is_fitted
 from numcompute_stream.stats import StreamStats
+from numcompute_stream.utils import check_array, check_is_fitted
 
 
 class StandardScaler:
@@ -80,7 +80,7 @@ class StandardScaler:
         """ 
         X = check_array(X)
         self.n_features_in_ = X.shape[1]
-        
+
         self._stats.update_chunks(X)
 
         self.mean_ = self._stats.mean
@@ -89,7 +89,7 @@ class StandardScaler:
         self.scale_ = self._stats.chunk_stan_dev()
 
         self.count = self._stats.count
-        
+
         return self
 
     def fit(self, X):
@@ -268,7 +268,7 @@ class MinMaxScaler:
         self.n_features_in_ = X.shape[1]
         self.data_min_ = np.min(X, axis=0)
         self.data_max_ = np.max(X, axis=0)
-        
+
         self.data_range_ = self.data_max_ - self.data_min_
 
         return self
@@ -393,7 +393,7 @@ class OneHotEncoder:
         X = check_array(X, dtype=None)
 
         self.n_features_in_ = X.shape[1]
-        
+
         self.categories_ = [np.unique(X[:, j]) for j in range(X.shape[1])]
 
         return self
@@ -501,7 +501,7 @@ class OneHotEncoder:
         """
 
         return self.fit(X).transform(X)
-    
+
     def partial_fit_transform(self, X):
         """
         Fits to X, then transforms it. Same as fit_transform but built for streaming.
@@ -551,7 +551,7 @@ class SimpleImputer:
         Space Complexity:
             O(1).
         """
-        if isinstance(self, "n_features_in_"):
+        if hasattr(self, "n_features_in_"):
             del self.n_features_in_
         return self
 
@@ -578,13 +578,13 @@ class SimpleImputer:
         Space Complexity:
             O(1).
         """
-        chunk_x = check_array(X, allow_nan=True)
-        if self.n_features_in_ == None:
+        chunk_x = check_array(chunk_x, allow_nan=True)
+        if self.n_features_in_ is None:
             self.n_features_in_ = chunk_x.shape[1]
-        
+
         if chunk_x.shape[1] != self.n_features_in_:
             raise ValueError(
-                f"chunk_x has {X.shape[1]} features, but SimpleImputer was "
+                f"chunk_x has {chunk_x.shape[1]} features, but SimpleImputer was "
                 f"fitted with {self.n_features_in_}."
             )
 
