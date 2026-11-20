@@ -41,7 +41,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
         Performs a benchmark on a given numcompute function.
         Compares runtime to equivalent Python loops.
 
-
         Parameters:
             *args:
                 optional arguments for a function if it requires them.
@@ -77,7 +76,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
             TimeoutError:
                 Function execution times out at a system level.
 
-            
 
         Time Complexity:
            Same as algorithm being benchmarked. 
@@ -96,25 +94,32 @@ def benchit(func, *args, repeat=5, mode='standard'):
         )
 
     match mode:
-        case 'demo':   
-            
+        case 'demo':
+
             if func not in DEMO_FUNCS: # Validating inputted function from tuple of demo functions
                 raise ValueError(
                 f"Unknown demo function '{mode}'. Please select from {DEMO_FUNCS}."
                 )
-           
-            pyloop_benches = np.copy(vectorized_benches) # Creates array to store Python loop implementation benches.
+
+            # Creates array to store Python loop implementation benches.
+            pyloop_benches = np.copy(vectorized_benches) 
 
             match func:
 
                 case 'stable_sort':
-                    test_arr_verify = [random.randint(1, 50) for _ in range(100)] # Testing input
-                    test_arr_sort_verify = sorted(test_arr_verify) # Final output from loop sort (used for verifying)
+                    # Testing input
+                    test_arr_verify = [random.randint(1, 50) for _ in range(100)]
 
-                    # Verification Step (e.g both vectorized and Python loop functions produce same output)
+                    # Final output from loop sort (used for verifying)
+                    test_arr_sort_verify = sorted(test_arr_verify) 
+
+
+                    # Verification Step (e.g both vectorized and Python loop functions
+                    # produce same output)
                     print("\nComparing numcompute stable sort...")
-                    np.testing.assert_array_equal(numcompute.stable_sort(test_arr_verify), test_arr_sort_verify)
-                    
+                    np.testing.assert_array_equal(numcompute.stable_sort(test_arr_verify), 
+                    test_arr_sort_verify)
+
                     # Filling vectorization bench results
                     for i in range(repeat): 
                         #Refresh inputs
@@ -132,7 +137,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
 
 
                         ## Python Loop
-                        
+
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
                         test_arr_loop.sort() # Calling the function

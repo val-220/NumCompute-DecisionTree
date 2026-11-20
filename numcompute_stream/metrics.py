@@ -38,7 +38,7 @@ class StreamMetrics:
     self.y_pred_chunks = []
     
 
-  def update(self, y_true_chunk, y_pred_chunk, window_size):
+  def update(self, y_true_chunk, y_pred_chunk, window_size = 200):
     """
       Updates the true and predicted values for metrics calculations in a chunked manner and stores them
 
@@ -63,11 +63,11 @@ class StreamMetrics:
     y_true_mask_chunk = ~np.isnan(y_true_chunk)
     y_pred_chunk = y_pred_chunk[y_true_mask_chunk]
     y_true_chunk = y_true_chunk[y_true_mask_chunk] 
-    
-    while y_pred_chunks & y_true_chunks < window_size:
+
+    while y_pred_chunk & y_true_chunk < window_size:
       self.y_pred_chunks.append(y_pred_chunk)
       self.y_true_chunks.append(y_true_chunk)
-  
+
     return self
 
   def result(self):
@@ -78,8 +78,8 @@ class StreamMetrics:
       self
 
       Returns:
-      A set containing the results of every metric function called. 
-      
+      A set containing the results of every metric function called.
+
       Time Complexitity:
         O(n) where n is the number of predictions in y_pred and y_true
       Space Complexitity:
@@ -95,9 +95,9 @@ class StreamMetrics:
     "Recall": self.recall(y_pred_chunk, y_true_chunk, self.pred_class),
     "F1 Score": self.f1score(y_pred_chunk, y_true_chunk, self.pred_class),
     "Confusion Matrix": self.confusion_matrix(y_pred_chunk, y_true_chunk, self.pred_class) ,
-    "MSE": self.MSE(y_pred_chunk, y_true_chunk, self.pred_class)
+    "MSE": self.MSE(y_pred_chunk, y_true_chunk)
     }
-  
+
   def reset(self):
     """
       Resets and preserves hyperparameters, needed if working on a new dataset
@@ -186,7 +186,7 @@ class StreamMetrics:
     prec = self.precision(y_pred,y_true,pred_class)
     reca = self.recall(y_pred,y_true,pred_class)
 
-    return 2* ((prec*reca)/(prec+reca)) if preca+reca > 0 else 0
+    return 2* ((prec*reca)/(prec+reca)) if prec + reca > 0 else 0
 
 
 
@@ -214,7 +214,7 @@ class StreamMetrics:
     flase_neg = np.count_nonzero(y_pred[pred_neg] != y_true[pred_neg])
     return (true_pos,false_pos,true_neg,flase_neg)
 
-  def MSE(y_pred, y_true):
+  def MSE(self, y_pred, y_true):
     """
     The Mean Squared Error (MSE), which evaluates the model by calculating
       the average squared difference between the predicted values and the target

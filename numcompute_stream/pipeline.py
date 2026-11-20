@@ -84,7 +84,7 @@ class Pipeline:
 
             Parameters:
                 None
-            
+ 
             Returns:
                 None
 
@@ -133,10 +133,10 @@ class Pipeline:
             )
 
             names.append(name)
-        
+
         if len(self.steps) == 0:
             raise ValueError("Pipeline steps cannot be empty")
-        
+
 
         if not len(names) == len(set(names)):
             raise ValueError(
@@ -172,27 +172,29 @@ class Pipeline:
             )
 
 
-    def fit(self, X):
+    def fit(self, X, y=None):
         """
             Fits each pipeline step sequentially on X.
 
-            Each intermidiate transformer is fitted on the current 
-            representation of X, then transformed before being 
-            passed on to the next step. Then the last step is 
+            Each intermidiate transformer is fitted on the current
+            representation of X, then transformed before being
+            passed on to the next step. Then the last step is
             fitted on the output of all the prior transformations.
 
             Parameters:
                 X: 
                     Input data passed through the pipeline.
+                y:  
+                    Target variable optionally passed through the pipeline.
 
             Returns: 
                 Self: 
                     The instance of the fitted Pipeline
-            
+
             Time Complexity:
                 Is dependant on the combined fit() and transform() complexity
                 of pipeline steps.
-            
+
             Space Complexity:
                 Is dependant on the transformed array produced by the pipeline
                 steps.
@@ -205,13 +207,35 @@ class Pipeline:
             curr_X = step.transform(curr_X)
 
         _, last_step = self.steps[-1]
-        
-        last_step.fit(curr_X)
+
+        if y is None:
+            last_step.fit(curr_X)
+        else:
+            last_step.fit(curr_X, y)
 
         self.fitted = True
 
         return self
-        
+
+
+    def partial_fit(self, X, y=None):
+        curr_X = X
+
+        for _, step in self.steps[:-1]:
+            step.partial_fit(curr_X)
+            curr_X = step.transform(curr_X)
+
+        _, last_step = self.steps[-1]
+
+        if y is None:
+            last_step.fit(curr_X)
+        else:
+            last_step.fit(curr_X, y)
+
+        self.fitted = True
+
+        return self
+
 
     def transform(self, X):
         """
@@ -293,6 +317,10 @@ class Pipeline:
             )
 
         return self.fit(X).transform(X)
+
+    def partial_fit_transform(self, X):
+
+        return self.partial_fit(X).transform(X)
 
     def predict(self, X):
         """
