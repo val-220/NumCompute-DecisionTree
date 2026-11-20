@@ -1,33 +1,51 @@
 import logging
-
-import numpy as np
+import tracemalloc
 
 from numcompute_stream import StreamMetrics
 
 
 class StreamTrainer:
-    def __init__(self, model, pipeline, metrics=None, logger=None, track_memory=True):
+    """
+        Trains and scores a model based on its metrics, via streaming.
+    """
+    def __init__(self, model, pipeline):
         self.model = model
         self.pipeline = pipeline          # list of (name, transformer) or None
-        self.metrics = metrics or StreamMetrics()
+        self.metrics =  StreamMetrics()
         self.logger = logging.getLogger(__name__)
         self.history = []                 # list of per-chunk dicts
-        self.n_chunks_ = 0
-        self.n_seen_ = 0
         self.cumulative_accuracy = 0                 # for cumulative accuracy
 
 
-def fit_chunk(self, X, y):
-    Xt = self.pipeline.partial_fit_transform(X)
+    def fit_chunk(self, X, y):
+        """
+        Transforms a chunk by feeding it into the pipeline,
+        then, updates the model via a partial_fit.
+        Arguments:
+            X : The features that are inputed into the data
+            y : Labels/ target variables of those features.
 
-    return self.model.partial_fit(Xt, y)
+        Returns: Nothing
+
+        Raises: 
+
+        Time Complexity: 
+
+        Space Complexity: 
+        """
+        tracemalloc.start()
+        Xt = self.pipeline.partial_fit_transform(X)
+        self.model.partial_fit(Xt, y)
+        tracemalloc.stop()
+        self.history.append(tracemalloc.get_traced_memory)
 
 
-def score_chunk(self, X,y):
-    Xt = self.pipeline.transform(X)
-    y_pred = self.model.predict(Xt)
 
-    metrics = StreamMetrics()
+    def score_chunk(self, X,y):
+        Xt = self.pipeline.transform(X)
+        y_pred = self.model.predict(Xt)
 
-    self.cumulative_accuracy += metrics.update(y, y_pred).accuracy(y, y_pred)
-    self.logger.into(metrics.update(y, y_pred).result())
+        metrics = StreamMetrics()
+
+        self.cumulative_accuracy += metrics.update(y, y_pred).accuracy(y, y_pred)
+        self.logger.info(metrics.update(y, y_pred).result())
