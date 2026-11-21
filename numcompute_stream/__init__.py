@@ -77,12 +77,7 @@ __all__ = [
     "quantile",
     "histogram"
 
-    "accuracy",
-    "precision",
-    "recall",
-    "f1score",
-    "confusion_matrix",
-    "MSE",
+    "StreamMetrics",
 
     "Pipeline",
 
