@@ -56,17 +56,29 @@ class StreamMetrics:
         O(n) where n is the number of predictions in y_pred and y_true
 
     """
+
+    # Masking out nans
     y_pred_mask_chunk = ~np.isnan(y_pred_chunk)
     y_pred_chunk = y_pred_chunk[y_pred_mask_chunk]
     y_true_chunk = y_true_chunk[y_pred_mask_chunk]
 
     y_true_mask_chunk = ~np.isnan(y_true_chunk)
     y_pred_chunk = y_pred_chunk[y_true_mask_chunk]
-    y_true_chunk = y_true_chunk[y_true_mask_chunk] 
+    y_true_chunk = y_true_chunk[y_true_mask_chunk]
 
-    while y_pred_chunk & y_true_chunk < window_size:
-      self.y_pred_chunks.append(y_pred_chunk)
-      self.y_true_chunks.append(y_true_chunk)
+
+    if y_true_chunk.size == 0:
+        return self
+
+    self.y_pred_chunks.append(y_pred_chunk)
+    self.y_true_chunks.append(y_true_chunk)
+
+    total = sum(c.size for c in self.y_true_chunks)
+
+    excess = total - window_size
+    if excess > 0:
+        self.y_true_chunks[0] = self.y_true_chunks[0][excess:]
+        self.y_pred_chunks[0] = self.y_pred_chunks[0][excess:]
 
     return self
 
@@ -142,6 +154,15 @@ class StreamMetrics:
       Space Complexitity:
         O(n) where n is the number of predictions in y_pred and y_true
     """
+    #Masking out nans
+    y_pred_mask= ~np.isnan(y_pred)
+    y_pred= y_pred[y_pred_mask]
+    y_true = y_true[y_pred_mask]
+
+    y_true_mask = ~np.isnan(y_true)
+    y_pred = y_pred[y_true_mask]
+    y_true= y_true[y_true_mask]
+
     pos_index = y_pred == pred_class
     return np.divide(np.sum(y_pred[pos_index] == y_true[pos_index]), y_pred[pos_index].size)
 
@@ -162,6 +183,15 @@ class StreamMetrics:
       Space Complexitity:
         O(n) where n is the number of predictions in y_pred and y_true
     """
+    #Masking out nans
+    y_pred_mask= ~np.isnan(y_pred)
+    y_pred= y_pred[y_pred_mask]
+    y_true = y_true[y_pred_mask]
+
+    y_true_mask = ~np.isnan(y_true)
+    y_pred = y_pred[y_true_mask]
+    y_true= y_true[y_true_mask]
+
     pos_index = y_true == pred_class
     return np.divide(np.sum(y_pred[pos_index] == y_true[pos_index]), y_true[pos_index].size)  
 
@@ -183,6 +213,16 @@ class StreamMetrics:
       Space Complexitity:
         O(n) where n is the number of predictions in y_pred and y_true
     """
+
+    #Masking out nans
+    y_pred_mask= ~np.isnan(y_pred)
+    y_pred= y_pred[y_pred_mask]
+    y_true = y_true[y_pred_mask]
+
+    y_true_mask = ~np.isnan(y_true)
+    y_pred = y_pred[y_true_mask]
+    y_true= y_true[y_true_mask]
+
     prec = self.precision(y_pred,y_true,pred_class)
     reca = self.recall(y_pred,y_true,pred_class)
 
@@ -199,22 +239,34 @@ class StreamMetrics:
         pred_class: The class to determine to precision of for multiclass classification
       Returns:
         truple of sclars in the order true positive, false positive, true negative, false negative
+
       Raises:
 
-      Time Complexitity:
+      Time Complexity:
         O(n) where n is the number of predictions in y_pred and y_true
-      Space Complexitity:
+      Space Complexity:
         O(n) where n is the number of predictions in y_pred and y_true
     """
+
+    #Masking out nans
+    y_pred_mask= ~np.isnan(y_pred)
+    y_pred= y_pred[y_pred_mask]
+    y_true = y_true[y_pred_mask]
+
+    y_true_mask = ~np.isnan(y_true)
+    y_pred = y_pred[y_true_mask]
+    y_true= y_true[y_true_mask]
+
     pred_pos = y_pred == pred_class
     pred_neg = y_pred != pred_class
+
     true_pos = np.count_nonzero(y_pred[pred_pos] == y_true[pred_pos])
     true_neg = np.count_nonzero(y_pred[pred_neg] == y_true[pred_neg])
     false_pos = np.count_nonzero(y_pred[pred_pos] != y_true[pred_pos])
-    flase_neg = np.count_nonzero(y_pred[pred_neg] != y_true[pred_neg])
-    return (true_pos,false_pos,true_neg,flase_neg)
+    false_neg = np.count_nonzero(y_pred[pred_neg] != y_true[pred_neg])
+    return (true_pos,false_pos,true_neg,false_neg)
 
-  def MSE(self, y_pred, y_true):
+  def MSE(self, y_pred_chunk, y_true_chunk):
     """
     The Mean Squared Error (MSE), which evaluates the model by calculating
       the average squared difference between the predicted values and the target
@@ -231,6 +283,16 @@ class StreamMetrics:
       Space Complexitity:
         O(n) where n is the number of predictions in y_pred and y_true
     """
-    return np.divide(np.sum(np.power(y_pred-y_true,2)),y_true.size)
+
+    # Masking out nans
+    y_pred_mask_chunk = ~np.isnan(y_pred_chunk)
+    y_pred_chunk = y_pred_chunk[y_pred_mask_chunk]
+    y_true_chunk = y_true_chunk[y_pred_mask_chunk]
+
+    y_true_mask_chunk = ~np.isnan(y_true_chunk)
+    y_pred_chunk = y_pred_chunk[y_true_mask_chunk]
+    y_true_chunk = y_true_chunk[y_true_mask_chunk]
+
+    return np.divide(np.sum(np.power(y_pred_chunk-y_true_chunk,2)),y_true_chunk.size)
 
 

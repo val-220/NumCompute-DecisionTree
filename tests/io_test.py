@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from numcompute.io import load_csv
+from numcompute_stream.io import load_csv
 
 
 class TestLoadCSV(unittest.TestCase):
