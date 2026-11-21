@@ -8,14 +8,14 @@ class StreamTrainer:
     """
         Trains and scores a model based on its metrics, via streaming.
     """
+
     def __init__(self, model, pipeline):
         self.model = model
-        self.pipeline = pipeline          # list of (name, transformer) or None
-        self.metrics =  StreamMetrics()
+        self.pipeline = pipeline  # list of (name, transformer) or None
+        self.metrics = StreamMetrics()
         self.logger = logging.getLogger(__name__)
-        self.history = []                 # list of per-chunk dicts
-        self.cumulative_accuracy = 0                 # for cumulative accuracy
-
+        self.history = []  # list of per-chunk dicts
+        self.cumulative_accuracy = 0  # for cumulative accuracy
 
     def fit_chunk(self, X, y):
         """
@@ -39,9 +39,7 @@ class StreamTrainer:
         tracemalloc.stop()
         self.history.append(tracemalloc.get_traced_memory)
 
-
-
-    def score_chunk(self, X,y):
+    def score_chunk(self, X, y):
         Xt = self.pipeline.transform(X)
         y_pred = self.model.predict(Xt)
 
