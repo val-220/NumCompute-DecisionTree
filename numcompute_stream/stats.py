@@ -14,12 +14,74 @@ appropriately.
 import numpy as np
 
 class StreamStats:
+
     def __init__(self):
+
         self.mean = 0.0  # running mean
         self.var = 0.0  # running variance
         self.M2 = 0.0   # running sum of squared deviations
         self.count = 0 # cumulative items processed from previous chunks
-    
+
+        # for calculation of streamed min and max
+        self.current_max = -np.inf
+        self.current_min = np.inf
+
+    def max_stream(self, chunk_x, axis=0):
+        self.current_max = -np.inf
+        """
+            Calculates the max for the inputed chunk data, updates with new batches
+
+            Parameters:
+                data: a numpy array containing the data to calculate the min of
+                axis: the axis to operate on, defaults to 0
+
+
+            Returns:
+                A scalar or an array containing the resulting mins
+
+            Raises:
+
+            Time Complexity:
+                O(n) where n is the number of elements of the data
+
+            Space Complexity:
+                O(n) where n is the number of elements of the data
+        """
+        chunk_running_max = np.maximum.accumulate(chunk_x, axis=axis)
+
+        updated_max = np.maximum(chunk_running_max, self.current_max)
+
+        self.current_max = np.take(updated_max, -1, axis=axis)
+        return updated_max
+
+    def min_stream(self, chunk_x, axis=0):
+        self.current_min = np.inf
+        """
+            Calculates the min for the inputed chunk data, updates with new batches
+
+            Parameters:
+                data: a numpy array containing the data to calculate the min of
+                axis: the axis to operate on, defaults to 0
+
+
+            Returns:
+                A scalar or an array containing the resulting mins
+
+            Raises:
+
+            Time Complexity:
+                O(n) where n is the number of elements of the data
+
+            Space Complexity:
+                O(n) where n is the number of elements of the data
+        """
+        chunk_running_min = np.minimum.accumulate(chunk_x)
+
+        updated_min = np.minimum(chunk_running_min, self.current)
+
+        self.current_min = np.take(updated_min, -1, axis=axis)
+        return updated_min
+
     def update_chunks(self, chunk_x):
         """
            Takes in a 1D NumpyArray and updates mean and variance using Welford's 
@@ -242,63 +304,6 @@ def stan_dev(data,axis=0):
             O(n) where n is the number of elements of the data
     """ 
     return np.nanstd(data,axis)
-
-def min_stream(chunk_x, axis=0):
-    self.current = np.inf
-    """
-        Calculates the min for the inputed chunk data, updates with new batches
-
-        Parameters:
-            data: a numpy array containing the data to calculate the min of
-            axis: the axis to operate on, defaults to 0
-            
-
-        Returns:
-            A scalar or an array containing the resulting mins
-
-        Raises:
-        
-        Time Complexity:
-            O(n) where n is the number of elements of the data
-
-        Space Complexity:
-            O(n) where n is the number of elements of the data
-    """ 
-    chunk_running_min = np.minimum.accumulate(chunk_x)
-
-    updated_min = np.minimum(chunk_running_min, self.current_min)
-
-    self.current = chunk_running_min[-1]
-    return updated_min
-
-
-def max_stream(chunk_x, axis=0):
-    self.current = -np.inf
-    """
-        Calculates the min for the inputed chunk data, updates with new batches
-
-        Parameters:
-            data: a numpy array containing the data to calculate the min of
-            axis: the axis to operate on, defaults to 0
-            
-
-        Returns:
-            A scalar or an array containing the resulting mins
-
-        Raises:
-        
-        Time Complexity:
-            O(n) where n is the number of elements of the data
-
-        Space Complexity:
-            O(n) where n is the number of elements of the data
-    """ 
-    chunk_running_max = np.maximum.accumulate(chunk_x)
-
-    updated_max = np.maximum(chunk_running_min, self.current_min)
-
-    self.current = chunk_running_max[-1]
-    return updated_max
 
 class StreamHistogram():
     """

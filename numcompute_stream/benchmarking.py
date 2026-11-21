@@ -86,7 +86,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
     gc.disable() # Eliminates a potential source of benchmarking variation
                  # by disabling Python garbage collector.
  
-    vectorized_benches = np.zeros(repeat);  # Initialise array to store repeated benchmark timings.
+    vectorized_benches = np.zeros(repeat)  # Initialise array to store repeated benchmark timings.
 
     if mode not in MODES: # Validating inputted mode
         raise ValueError(
