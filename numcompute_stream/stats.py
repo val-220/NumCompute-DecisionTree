@@ -193,7 +193,7 @@ class StreamQuantileP2:
         count = self.count
         
         if len(self.q_heights) <5:
-            self.q_heights.append(x)
+            self.q_heights = np.append(q_heights,x)
             self.q_heights = sorted(self.q_heights)
             return self
 
