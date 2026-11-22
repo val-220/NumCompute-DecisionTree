@@ -363,9 +363,9 @@ class Pipeline:
                 f"Last step missing callable predict() method."
             )
 
-        curr_X = X
+        curr_x = X
 
         for _, step in self.steps[:-1]:
-            curr_X = step.transform(curr_X)
+            curr_x = step.transform(curr_x)
 
-        return last_step.predict(curr_X)
+        return last_step.predict(curr_x)

@@ -50,7 +50,7 @@ def multi_key_sort(values, keys_array):
 
             keys_array: A sequence of column indices that specify the 
                 sorting priority. The first index is the primary key, 
-                followed by any number of necessarry tie-breaking keys.
+                followed by any number of necessary tie-breaking keys.
                 
 
 

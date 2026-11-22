@@ -14,7 +14,8 @@ requires-python = ">=3.12"
 # Runtime dependencies
 dependencies = [
     "numpy",
-    "matplotlib"
+    "matplotlib",
+    "pytest>=9.2.0",
 ]
 
 # Tells setuptools where to look for the package

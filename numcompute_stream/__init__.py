@@ -50,6 +50,10 @@ from .metrics import (
 
 from .pipeline import Pipeline
 
+from .stream import StreamTrainer
+
+from .tree import DecisionTreeClassifier
+
 __all__ = [
     "load_csv",
 
@@ -62,7 +66,7 @@ __all__ = [
     "StandardScaler",
 
     "stable_sort",
-    "multi_key_sort"
+    "multi_key_sort",
     "topk",
     "quickselect",
     "binary_search",
@@ -82,6 +86,8 @@ __all__ = [
 
     "Pipeline",
 
+    "DecisionTreeClassifier",
+    "StreamTrainer"
 ]
 
 

@@ -14,6 +14,13 @@ def gini(y):
         Parameters: 
         y: The feature which gini impurity is calculated on.
 
+        Returns: a calculated gini impurity
+
+        Time Complexity:
+        O(n) where n is the number of samples
+
+        Space Complexity:
+        O(n) where n is the number of unique class count
     """
     if len(y) == 0:
         return 0.0
@@ -23,6 +30,13 @@ def gini(y):
 class Node:
     """
         Data structure represent nodes in the Decision Tree
+
+        Parameters:
+            feature:  the question: X[feature] == 1 ?
+            left:   where the "yes" rows go
+            right: where the "no" rows go
+            label: label of the node.
+
     """
     def __init__(self, feature=None, left=None, right=None, label=None):
         self.feature = feature            # the question: X[feature] == 1 ?
@@ -30,11 +44,19 @@ class Node:
         self.right = right                # where the no rows went
         self.label = label
 
+    """
+    """
 
 
 class DecisionTreeClassifier:
     """
         A decision tree classifier which uses gini for impurity. Based on in-class material and sk-learn documentation.
+
+        Parameters:
+            max_depth: maximum depth of the decision tree
+            buffer_size: buffer window for the decision tree
+            min_samples_split: minimum number of samples required to split an internal node
+
     """
     def __init__(self, max_depth=2, buffer_size=5, min_samples_split = 2,
     max_features = None):
@@ -58,6 +80,8 @@ class DecisionTreeClassifier:
 
             mask: used to calculate the gain given the gini impurity.
 
+            Returns: The numerical gain
+
         """
         before = gini(y)
         after = (mask.sum() * gini(y[mask])
@@ -76,10 +100,10 @@ class DecisionTreeClassifier:
             number of features
 
         Time Complexity:
-            O(n)
+            O(m * nlogn) where n is the number of samples and m is the features
 
         Space Complexity:
-            O(n)
+            O(n) where n is the n values of a single feature column
         """
         best_f, best_gain = None, 0.0
         for f in range(self.max_features is not None or X.shape[1]):

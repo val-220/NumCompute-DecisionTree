@@ -56,6 +56,8 @@ class StreamMetrics:
         O(n) where n is the number of predictions in y_pred and y_true
 
     """
+    y_true_chunk = np.asarray(y_true_chunk)
+    y_pred_chunk = np.asarray(y_pred_chunk)
 
     # Masking out nans
     y_pred_mask_chunk = ~np.isnan(y_pred_chunk)
@@ -137,6 +139,8 @@ class StreamMetrics:
         O(n) where n is the number of predictions in y_pred and y_true
 
     """
+    y_pred = np.asarray(y_pred)
+    y_true = np.asarray(y_true)
     return np.divide(np.sum(np.where(y_pred ==y_true,1,0)),y_true.size)
     
 

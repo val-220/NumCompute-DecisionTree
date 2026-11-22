@@ -43,7 +43,9 @@ class StreamTrainer:
         Xt = self.pipeline.transform(X)
         y_pred = self.model.predict(Xt)
 
-        metrics = StreamMetrics()
+        self.metrics.update(y, y_pred)  # once
+        result = self.metrics.result()  # once
 
-        self.cumulative_accuracy += metrics.update(y, y_pred).accuracy(y, y_pred)
-        self.logger.info(metrics.update(y, y_pred).result())
+        self.cumulative_accuracy = result["Accuracy"]
+        self.logger.info(result)
+        return result
