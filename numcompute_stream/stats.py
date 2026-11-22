@@ -352,7 +352,7 @@ def stan_dev(data,axis=0):
     """ 
     return np.nanstd(data,axis)
 
-class StreamHistogram():
+class StreamHistogram:
     """
         Attributes:
             start: start of the bin range
