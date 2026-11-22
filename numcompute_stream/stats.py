@@ -27,7 +27,6 @@ class StreamStats:
         self.current_min = np.inf
 
     def max_stream(self, chunk_x, axis=0):
-        self.current_max = -np.inf
         """
             Calculates the max for the inputed chunk data, updates with new batches
 
@@ -48,15 +47,14 @@ class StreamStats:
             Space Complexity:
                 O(n) where n is the number of elements of the data
         """
-        chunk_running_max = np.maximum.accumulate(chunk_x, axis=axis)
+        chunk_running_max = np.nanmax(chunk_x, axis=axis)
 
         updated_max = np.maximum(chunk_running_max, self.current_max)
 
         self.current_max = np.take(updated_max, -1, axis=axis)
-        return updated_max
+        return self.current_max
 
     def min_stream(self, chunk_x, axis=0):
-        self.current_min = np.inf
         """
             Calculates the min for the inputed chunk data, updates with new batches
 
@@ -76,12 +74,12 @@ class StreamStats:
             Space Complexity:
                 O(n) where n is the number of elements of the data
         """
-        chunk_running_min = np.minimum.accumulate(chunk_x)
+        chunk_running_min = np.nanmin(chunk_x)
 
-        updated_min = np.minimum(chunk_running_min, self.current)
+        updated_min = np.minimum(chunk_running_min, self.current_min)
 
         self.current_min = np.take(updated_min, -1, axis=axis)
-        return updated_min
+        return self.current_min
 
     def update_chunks(self, chunk_x):
         """
@@ -130,9 +128,9 @@ class StreamStats:
 
         self.count = total_n
     
-        return self 
+        return self
 
-    def chunk_stan_dev(self) -> float:
+    def stan_dev(self) -> float:
         print("DEBUG self.var:", repr(self.var), type(self.var))
         stan_dev = np.sqrt(self.var)
         return np.where(stan_dev == 0.0, 1.0, stan_dev)
@@ -155,11 +153,13 @@ class StreamQuantileP2:
         self.count = 0 # cumulative items processed from previous chunks
         self.obs = [] # first 5 observations
     
-    def update_chunks(self, chunk_x):
+    def update(self, chunk_x):
         """ Runs the P2 algorithm and saves the result"""
+        chunk_x = chunk_x[~np.isnan(chunk_x)]
         for x in chunk_x:
             self.add(x)
         return self
+
 
     
     def add(self, x): #
@@ -171,7 +171,7 @@ class StreamQuantileP2:
 
 
         Raises:
-            ValueError: if no data is provided
+            ValueError: if no data is provided or cannot compute k in step 1 of the algorithm
             TypeError: if provided data has strings, or none
             Exception: If Step 1 of the algorithm fails to produce valid result
 
@@ -184,6 +184,7 @@ class StreamQuantileP2:
 
 
         """
+
         # initializing values
         p = self.p
         n = self.n
@@ -192,11 +193,14 @@ class StreamQuantileP2:
         dns = self.dns
         count = self.count
         
-        if len(self.q_heights) <5:
-            self.q_heights = np.append(q_heights,x)
-            self.q_heights = sorted(self.q_heights)
+        if self.count <5:
+            self.obs.append(x)
+            self.count += 1
+            if self.count == 5:
+                self.q_heights = np.sort(np.array(self.obs))
             return self
 
+        self.count +=1
         # Step 1 of the Algorithm
         if x<= self.q_heights[0]:
             self.q_heights[0] = x # new minimum
@@ -213,7 +217,7 @@ class StreamQuantileP2:
         elif x < self.q_heights[4]:
             k = 3
         else:
-            raise Exception("Step 1 of the algorithm has produced an invalid result, cannot compute k")
+            raise ValueError(f"Step 1 of the algorithm has produced an invalid result, cannot compute k for x={x}")
 
         # Step 2 of the Algorithm, increment position of markers k+1 through 5
         # Update desired positions for all markers
@@ -236,7 +240,7 @@ class StreamQuantileP2:
                     self.q_heights[i] = self._linear(i, d_sign)
                 self.n[i] +=d_sign
         
-    def score(self):
+    def result(self):
         """Estimates the percentile based on pre-calculated steps
 
             Returns:
@@ -249,9 +253,9 @@ class StreamQuantileP2:
             return self.q_heights[4]
 
         # selecting an index that's closest to the desired percentile
-        elif len(self.q_heights ) < 5:
-            index = int(len(self.q_heights) * self.p) 
-            return self.q_heights[index]
+        elif self.count < 5:
+
+            return  np.quantile(self.obs, self.p)
 
         return self.q_heights[2]    
     
@@ -368,11 +372,11 @@ class StreamHistogram:
             O(n) where n is the amount of bins
     """
 
-    def __init__ (self, start, end , bins=10):
+    def __init__ (self, bins=10, start=None, end=None ):
         self.start = start
         self.end = end
         self.bins = bins
-        self.edges = np.histogram_bin_edges([], bins=bins, range=(start, end))
+        self.edges = None
         self.counts = np.zeros(bins)
 
     def histogram(self, chunk_x):
@@ -395,6 +399,12 @@ class StreamHistogram:
             O(n) where n is the amount of bins
             
         """
+        if self.start is None and self.end is None:
+            self.start = np.nanmin(chunk_x)
+            self.end = np.nanmax(chunk_x)
+            self.edges = np.linspace(self.start, self.end, self.bins + 1)
+        else:
+            self.edges = np.linspace(self.start, self.end, self.bins + 1)
         if chunk_x is None:
             raise ValueError("Chunk cannot be empty")
 

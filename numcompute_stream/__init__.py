@@ -35,11 +35,12 @@ from .rank import (
 )
 
 from .stats import (
-    mean, 
-    median, 
-    stan_dev, 
-    min_stream,
-    max_stream, 
+    mean,
+    median,
+    stan_dev,
+    StreamStats,
+    StreamHistogram,
+    StreamQuantileP2,
     quantile, 
 )
 
@@ -69,16 +70,18 @@ __all__ = [
     "rank",
     "percentile",
 
+    "StreamHistogram",
+    "StreamStats",
+    "StreamQuantileP2",
     "mean",
     "median",
     "stan_dev",
-    "min",
-    "max",
     "quantile",
-    "histogram"
 
     "StreamMetrics",
 
     "Pipeline",
 
 ]
+
+
