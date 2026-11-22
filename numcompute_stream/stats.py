@@ -156,13 +156,34 @@ class StreamQuantileP2:
         self.obs = [] # first 5 observations
     
     def update_chunks(self, chunk_x):
+        """ Runs the P2 algorithm and saves the result"""
         for x in chunk_x:
             self.add(x)
         return self
 
     
-    def add(self, x): # Using P2 Algorithm on a single observation
-        
+    def add(self, x): #
+        """
+        Using P2 Algorithm on a single observation
+
+        Parameters:
+            x: The individual observation in chunk x
+
+
+        Raises:
+            ValueError: if no data is provided
+            TypeError: if provided data has strings, or none
+            Exception: If Step 1 of the algorithm fails to produce valid result
+
+        Time Complexity:
+            O(n) where n is the number of elements of the data
+
+        Space Complexity:
+            O(1) Has constant space
+
+
+
+        """
         # initializing values
         p = self.p
         n = self.n
@@ -216,6 +237,12 @@ class StreamQuantileP2:
                 self.n[i] +=d_sign
         
     def score(self):
+        """Estimates the percentile based on pre-calculated steps
+
+            Returns:
+                q_heights: index closest to estimated percentile
+        """
+
         if self.p == 0:
             return self.q_heights[0]
         elif self.p == 1:
@@ -228,7 +255,12 @@ class StreamQuantileP2:
 
         return self.q_heights[2]    
     
-    def _parabolic(self, i:int, d: double) -> float:
+    def _parabolic(self, i:int, d: np.double) -> float:
+            """
+                Quantile if a parabolic equation is needed in step 3
+
+                Returns: Parabolic estimate
+            """
             q, n = self.q_heights, self.n
             
             return q[i] + d / (n[i + 1] - n[i - 1]) * (
@@ -237,13 +269,19 @@ class StreamQuantileP2:
         )
     
     def _linear(self, i:int, d: int) -> float:
+        """
+            Quantile if a linear  equation is needed in step 3
+
+            Returns: linear estimate
+
+        """
         q, n = self.q_heights, self.n
         return q[i] + d * (q[i + d] - q[i]) / (n[i + d] - n[i])
 
 
 def mean(data, axis=0):
     """
-        Calculates the stastical mean for the inputed data
+        Calculates the statistical mean for the inputed data
 
         Parameters:
             data: a numpy array containing the data to calculate the mean of
@@ -349,6 +387,12 @@ class StreamHistogram():
 
         Raises:
             ValueError: if chunk is empty
+
+        Time Complexity:
+            O(m log n ) where n is the number of elements of the data and m is the number of bins
+
+        Space Complexity:
+            O(n) where n is the amount of bins
             
         """
         if chunk_x is None:
