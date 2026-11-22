@@ -86,13 +86,13 @@ class TestMinMaxScaler(unittest.TestCase):
     def test_chunk_invariance(self):
         x_whole = np.array([[1.0, 2.0], [3.0, 4.0]])
 
-        scaler_whole = MinMaxScaler().partial_fit(x_whole).transform(x_whole)
+        minmax_whole = MinMaxScaler().partial_fit(x_whole).transform(x_whole)
 
-        scaler_chunked = MinMaxScaler()
+        minmax_chunked = MinMaxScaler()
         for i in range(len(x_whole)):
-            scaler_chunked.partial_fit(x_whole[i:i + 1])
+            minmax_chunked.partial_fit(x_whole[i:i + 1])
 
-        np.testing.assert_allclose(scaler_chunked.transform(x_whole), scaler_whole, atol=1e-12)
+        np.testing.assert_allclose(minmax_chunked.transform(x_whole), minmax_whole, atol=1e-12)
 
 
 class TestOneHotEncoder(unittest.TestCase):
@@ -125,6 +125,10 @@ class TestOneHotEncoder(unittest.TestCase):
         result = encoder.transform([["green", "S"]])
 
         np.testing.assert_array_equal(result, [[0, 0, 0, 1]])
+
+
+    def test_chunk_invariance(self):
+        pass
 
 
 class TestSimpleImputer(unittest.TestCase):
