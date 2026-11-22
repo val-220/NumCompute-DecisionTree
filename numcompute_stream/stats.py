@@ -40,6 +40,7 @@ class StreamStats:
                 A scalar or an array containing the resulting mins
 
             Raises:
+                
 
             Time Complexity:
                 O(n) where n is the number of elements of the data
@@ -96,8 +97,10 @@ class StreamStats:
                 Running mean and variance
 
             Time Complexity:
+                O(n) where n is the elements being processed
 
             Space Complexity:
+                O(1)
 
         """
         if chunk_x.size == 0:
@@ -238,9 +241,6 @@ class StreamQuantileP2:
         return q[i] + d * (q[i + d] - q[i]) / (n[i + d] - n[i])
 
 
-        
-
-
 def mean(data, axis=0):
     """
         Calculates the stastical mean for the inputed data
@@ -253,6 +253,9 @@ def mean(data, axis=0):
             A scalar or an array containing the resulting means
 
         Raises:
+            ValueError: if no data is provided
+            AxisError: if provided axis index is out of bounds
+            TypeError: if provided data has strings, or none
         
         Time Complexity:
             O(n) where n is the number of elements of the data
@@ -275,7 +278,10 @@ def median(data,axis=0):
             A scalar or an array containing the resulting median
 
         Raises:
-        
+            ValueError: if no data is provided
+            AxisError: if provided axis index is out of bounds
+            TypeError: if provided data has strings, or none
+
         Time Complexity:
             O(n) where n is the number of elements of the data
 
@@ -296,6 +302,9 @@ def stan_dev(data,axis=0):
             A scalar or an array containing the resulting SD
 
         Raises:
+            ValueError: if no data is provided
+            AxisError: if provided axis index is out of bounds
+            TypeError: if provided data has strings, or none
         
         Time Complexity:
             O(n) where n is the number of elements of the data
@@ -307,57 +316,55 @@ def stan_dev(data,axis=0):
 
 class StreamHistogram():
     """
-        Groups the data into the chosen number of bins, uses the following algorithm to implement streaming:
-        https://jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
-
-        Basic structure inspired by:
-        https://github.com/carsonfarmer/streamhist/blob/master/streamhist/histogram.py
-
-
         Attributes:
-            maxbins: the number of bins to group the data into 
-            p:  centroids, kept sorted
-            m:  the list of bin counts
-            total: total number of datapoints for which the histogram has seen.
-
+            start: start of the bin range
+            end: end of the bin range
+            bins: number of bins
+            edges: edges of the bins
+            counts: counts of values in each bin.
         
         Time Complexity:
-            O(bn) where n is the number of elements of the data and b is the number of bins
+            O(m log n ) where n is the number of elements of the data and m is the number of bins
 
         Space Complexity:
-            O(n) where n is the number of elements of the data
+            O(n) where n is the amount of bins
     """
 
-    def __init__ (self, bins=64):
-        """Initializes the histogram.
+    def __init__ (self, start, end , bins=10):
+        self.start = start
+        self.end = end
+        self.bins = bins
+        self.edges = np.histogram_bin_edges([], bins=bins, range=(start, end))
+        self.counts = np.zeros(bins)
 
-        Args: 
-            bins: maximum number of bins to group the data into.
-        
-        """
-        self.maxbins = maxbins
-        self.p = []   # centroids, kept sorted
-        self.m = []   # counts
-        self.total
-
-
-
-    def update(self, x):
+    def histogram(self, chunk_x):
         """
         Updates the histogram with a new value
 
-         Args:
-            x: A point on the histogram
+         Parameters:
+            chunk_x: Chunked values on the histogram
+
+        Returns:
+            Counts for each edge of the histogram.
 
         Raises:
+            ValueError: if chunk is empty
             
         """
-    
+        if chunk_x is None:
+            raise ValueError("Chunk cannot be empty")
+
+        chunk_x = chunk_x[~np.isnan(chunk_x)]
+        self.counts+= np.histogram(chunk_x, bins=self.edges)[0]
+        return self.counts, self.edges
+
+
+
 
 
 def quantile(data, q):
     """
-        Groups the data into the probility or sequence of probabilities to compute
+        Groups the data into the probability or sequence of probabilities to compute
 
         Parameters:
             data: a numpy array containing the data to calculate the mean of
@@ -368,6 +375,7 @@ def quantile(data, q):
             Scalar or array of the quantiles
 
         Raises:
+            ValueError: if data is empty
         
         Time Complexity:
             O(bn) where n is the number of elements of the data and b is the number of bins
