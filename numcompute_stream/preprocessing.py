@@ -86,7 +86,7 @@ class StandardScaler:
         self.mean_ = self._stats.mean
         self.var_ = self._stats.var
         # Avoid division by zero for constant features
-        self.scale_ = self._stats.chunk_stan_dev()
+        self.scale_ = self._stats.stan_dev()
 
         self.count = self._stats.count
 
@@ -200,6 +200,7 @@ class MinMaxScaler:
                 If min is not less than max.
         """
 
+        self.data_min_ = None
         low, high = feature_range
 
         if low >= high:
@@ -230,7 +231,7 @@ class MinMaxScaler:
             O(f) for the stored statistics.
         """
 
-        X = check_array(X)
+        x = check_array(X)
 
         self.n_features_in_ = X.shape[1]
         self.data_min_ = np.min(X, axis=0)
@@ -262,12 +263,18 @@ class MinMaxScaler:
         Space Complexity:
             O(f) for the stored statistics.
         """
-
         X = check_array(X)
 
-        self.n_features_in_ = X.shape[1]
-        self.data_min_ = np.min(X, axis=0)
-        self.data_max_ = np.max(X, axis=0)
+        chunk_min = X.min(axis=0)
+        chunk_max = X.max(axis=0)
+
+        if self.data_min_ is None:
+            self.n_features_in_ = X.shape[1]
+            self.data_min_ = chunk_min
+            self.data_max_ = chunk_max
+
+        self.data_min_ = np.minimum(self.data_min_, chunk_min)
+        self.data_max_ = np.maximum(self.data_max_, chunk_max)
 
         self.data_range_ = self.data_max_ - self.data_min_
 

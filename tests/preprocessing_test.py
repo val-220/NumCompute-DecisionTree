@@ -42,6 +42,20 @@ class TestStandardScaler(unittest.TestCase):
             scaler.transform([[1.0, 2.0, 3.0]])
 
 
+    def test_chunk_invariance(self):
+        x_whole = np.array([[1.0, 2.0], [3.0, 4.0]])
+
+        scaler_whole = StandardScaler().partial_fit(x_whole).transform(x_whole)
+
+        scaler_chunked = StandardScaler()
+        for i in range(len(x_whole)):
+            scaler_chunked.partial_fit(x_whole[i:i + 1])
+
+        np.testing.assert_allclose(scaler_chunked.transform(x_whole), scaler_whole, atol=1e-12)
+
+
+
+
 class TestMinMaxScaler(unittest.TestCase):
     def test_default_range(self):
         X = np.array([[1.0], [2.0], [3.0]])
@@ -67,6 +81,18 @@ class TestMinMaxScaler(unittest.TestCase):
     def test_invalid_range_raises(self):
         with self.assertRaises(ValueError):
             MinMaxScaler(feature_range=(1, 0))
+
+
+    def test_chunk_invariance(self):
+        x_whole = np.array([[1.0, 2.0], [3.0, 4.0]])
+
+        scaler_whole = MinMaxScaler().partial_fit(x_whole).transform(x_whole)
+
+        scaler_chunked = MinMaxScaler()
+        for i in range(len(x_whole)):
+            scaler_chunked.partial_fit(x_whole[i:i + 1])
+
+        np.testing.assert_allclose(scaler_chunked.transform(x_whole), scaler_whole, atol=1e-12)
 
 
 class TestOneHotEncoder(unittest.TestCase):
@@ -119,6 +145,9 @@ class TestSimpleImputer(unittest.TestCase):
     def test_non_numeric_fill_value_raises(self):
         with self.assertRaises(TypeError):
             SimpleImputer(fill_value="missing")
+
+
+
 
 
 if __name__ == "__main__":
