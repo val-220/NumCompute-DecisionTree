@@ -4,8 +4,8 @@ Unit tests for the pipeline.py module
 import unittest
 import numpy as np
 
-from numcompute.pipeline import Pipeline
-from numcompute.preprocessing import StandardScaler, MinMaxScaler
+from numcompute_stream.pipeline import Pipeline
+from numcompute_stream.preprocessing import StandardScaler, MinMaxScaler
 
 class DummyTransformerNoFit:
     def transform(self, X):
