@@ -6,8 +6,8 @@ import unittest
 
 import numpy as np
 
-from numcompute.exceptions import NotFittedError
-from numcompute.preprocessing import (
+from numcompute_stream.exceptions import NotFittedError
+from numcompute_stream.preprocessing import (
     MinMaxScaler,
     OneHotEncoder,
     SimpleImputer,

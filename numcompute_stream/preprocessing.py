@@ -536,8 +536,8 @@ class SimpleImputer:
 
         if not isinstance(fill_value, (int, float, np.number)):
             raise TypeError("fill_value must be a number.")
-
         self.fill_value = fill_value
+        self.reset()
 
 
 
@@ -551,8 +551,7 @@ class SimpleImputer:
         Space Complexity:
             O(1).
         """
-        if hasattr(self, "n_features_in_"):
-            del self.n_features_in_
+        self.n_features_in_ = None
         return self
 
     def partial_fit(self,chunk_x):
