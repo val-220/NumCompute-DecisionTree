@@ -25,8 +25,9 @@ import statistics
 
 import numcompute_stream
 
-MODES = ("demo","standard")
-DEMO_FUNCS = ("quantile", "maximum", "median", "stan_dev", "imputer")
+from numcompute_stream import StreamStats, StreamQuantileP2
+
+
 
 """ Helper functions for comparing benchmark results"""
 # Looped quantile
@@ -182,7 +183,6 @@ def stan_dev_loop(data):
 """Benchmarking"""
 
 def benchit(func, *args, repeat=5, mode='standard'):
-
     """
         Ranks numerical data from 1 to n datapoints.
         Performs a benchmark on a given numcompute function.
@@ -214,7 +214,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
             comparisons for the function and optionally compared to a numpy loop.
 
         Raises:
-
             ValueError:
                 If a mode for benchmarking that does not exist
                 is inputted.
@@ -223,7 +222,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
 
             TimeoutError:
                 Function execution times out at a system level.
-
 
         Time Complexity:
            Same as algorithm being benchmarked. 
@@ -243,7 +241,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
 
     match mode:
         case 'demo':
-
             if func not in DEMO_FUNCS: # Validating inputted function from tuple of demo functions
                 raise ValueError(
                 f"Unknown demo function '{mode}'. Please select from {DEMO_FUNCS}."
@@ -255,10 +252,56 @@ def benchit(func, *args, repeat=5, mode='standard'):
             match func:
 
                 case 'quantile':
-                    pass
+                    for i in range(repeat):
+                        # Refresh inputs
+                        test_arr = [random.randint(1, 50) for _ in range(100)]
+
+                        ## VECTORISED
+                        start_time = perf_counter()  # Start time, uses a high precision, non-adjustable clock for benchmarking.
+
+                        quantile_stream = StreamQuantileP2(0.3)
+                        quantile_stream.update(test_arr)
+                        # Calling the function
+
+                        end_time = perf_counter()  # end time
+
+                        vectorized_benches[i] = round((end_time - start_time) * 1000,
+                                                      6)  # Add result to the array and round to 6 decimal places
+
+                        ## Python Loop
+                        start_time = perf_counter()  # Start time, uses a high precision, non-adjustable clock for benchmarking.
+
+                        quantile_loop(test_arr,0.3)  # Calling the function
+
+                        end_time = perf_counter()  # end time
+
+                        pyloop_benches[i] = round((end_time - start_time) * 1000,
+                                                  6)  # Add result to the array and round to 6 decimal places
 
                 case 'maximum':
-                    pass
+                    for i in range(repeat):
+                        # Refresh inputs
+                        test_arr = [random.randint(1, 50) for _ in range(100)]
+
+                        ## VECTORISED
+                        start_time = perf_counter()  # Start time, uses a high precision, non-adjustable clock for benchmarking.
+
+                        stream_max = StreamStats().max_stream(test_arr)# Calling the function
+
+                        end_time = perf_counter()  # end time
+
+                        vectorized_benches[i] = round((end_time - start_time) * 1000,
+                                                      6)  # Add result to the array and round to 6 decimal places
+
+                        ## Python Loop
+                        start_time = perf_counter()  # Start time, uses a high precision, non-adjustable clock for benchmarking.
+
+                        max_loop(test_arr)  # Calling the function
+
+                        end_time = perf_counter()  # end time
+
+                        pyloop_benches[i] = round((end_time - start_time) * 1000,
+                                                  6)  # Add result to the array and round to 6 decimal places
 
                 case 'minimum':
 
@@ -270,7 +313,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         ## VECTORISED
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
-                        numcompute_stream.median(test_arr) # Calling the function
+                        stream_min = StreamStats().min_stream(test_arr) # Calling the function
 
                         end_time = perf_counter()   # end time
 
@@ -280,7 +323,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         ## Python Loop
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
-                        statistics.median(test_arr) # Calling the function
+                        min_loop(test_arr) # Calling the function
 
                         end_time = perf_counter()   # end time
 
@@ -295,7 +338,8 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         ## VECTORISED
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
-                        numcompute_stream.stan_dev(test_arr) # Calling the function
+                        stats = StreamStats().update_chunks(test_arr)
+                        stream_stan_dev = stats.stan_dev()
 
                         end_time = perf_counter()   # end time
 
@@ -305,7 +349,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         ## Python Loop
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
-                        statistics.pstdev(test_arr) # Calling the function
+                        stan_dev_loop(test_arr) # Calling the function
 
                         end_time = perf_counter()   # end time
 
@@ -325,7 +369,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
 
                         end_time = perf_counter()   # end time
 
-                        vectorized_benches[i] = round((end_time - start_time)* 1000, 6)  # Add result to the array and round to 6 decimal places
+                        vectorized_benches[r] = round((end_time - start_time)* 1000, 6)  # Add result to the array and round to 6 decimal places
 
 
                         ## Python Loop
@@ -372,4 +416,8 @@ def benchit(func, *args, repeat=5, mode='standard'):
             print(f'\nMilisecond execution results for {repeat} repeats (in ms):\n', vectorized_benches) 
 
             print(f'\nAverage execution time: {np.average(vectorized_benches):.6f} ms') # Mean execution time
- 
+
+MODES = ("demo","standard")
+DEMO_FUNCS = ("quantile", "maximum", "minimum", "stan_dev", "imputer")
+for func in DEMO_FUNCS:
+    benchit(func, mode='demo', repeat=10)
