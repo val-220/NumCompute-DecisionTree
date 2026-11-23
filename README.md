@@ -13,7 +13,10 @@ A Numpy based scientific computing toolkit that features preprocessing, statisti
 | `stats` | Descriptive statistics, histogram, quantiles | Done |
 | `metrics` | Classification metrics, confusion matrix, `mse` | Done |
 | `pipeline` | `Pipeline` for chaining transformers and models | Done |
-| `benchmarking` | Performance comparisons | In progress |
+| `benchmarking` | Performance comparisons | Done |
+| `stream`     | Implements StreamTrainer that combines streaming with model training | Done |
+| `tree ` | Implements a Decision Tree Classifier | Done |
+| `visualise` | Methods for visualizing certain Machine Learning metrics, streamed | Done |
 | `utils`, `exceptions` | Shared helpers (`check_array`, `check_is_fitted`) and `NotFittedError` | Done |
 
 Module owners: update your row when you push.
