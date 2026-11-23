@@ -14,6 +14,7 @@ from numcompute_stream.preprocessing import (
     StandardScaler,
 )
 
+from itertools import batched
 
 class TestStandardScaler(unittest.TestCase):
     def test_output_has_zero_mean_unit_std(self):
@@ -41,6 +42,42 @@ class TestStandardScaler(unittest.TestCase):
         with self.assertRaises(ValueError):
             scaler.transform([[1.0, 2.0, 3.0]])
 
+    """Partial fit tests"""
+    def test_partial_output_has_zero_mean_unit_std(self):
+        X = np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]])
+
+        chunked = StandardScaler()
+
+        for row_chunk in batched(X, 2):
+             chunked.partial_fit(row_chunk)
+
+        result = chunked.transform(X)
+
+        np.testing.assert_allclose(result.mean(axis=0), [0, 0], atol=1e-12)
+        np.testing.assert_allclose(result.std(axis=0), [1, 1])
+
+    def test_partial_constant_column_becomes_zeros(self):
+        X = np.full((3, 1), 0.1)
+
+        chunked = StandardScaler()
+
+        for row_chunk in batched(X, 2):
+             chunked.partial_fit(row_chunk)
+
+        result = chunked.transform(X)
+
+        np.testing.assert_allclose(result, np.zeros((3, 1)), atol=1e-12)
+
+    def test_partial_wrong_feature_count_raises(self):
+
+        X = np.array([[1.0, 2.0], [3.0, 4.0]])
+
+        chunked = StandardScaler()
+        for row_chunk in batched(X, 2):
+             chunked.partial_fit(row_chunk)
+
+        with self.assertRaises(ValueError):
+            chunked.transform([[1.0, 2.0, 3.0]])
 
     def test_chunk_invariance(self):
         x_whole = np.array([[1.0, 2.0], [3.0, 4.0]])
@@ -126,9 +163,28 @@ class TestOneHotEncoder(unittest.TestCase):
 
         np.testing.assert_array_equal(result, [[0, 0, 0, 1]])
 
+    """ Partial fit tests"""
+    def test_partial_fit_encoding(self):
+        expected = np.array(
+            [
+                [0, 1, 0, 1],
+                [1, 0, 1, 0],
+                [0, 1, 1, 0],
+            ]
+        )
+
+        encoder = OneHotEncoder().partial_fit(self.X)
+        np.testing.assert_array_equal(encoder.transform(self.X), expected)
 
     def test_chunk_invariance(self):
-        pass
+
+        expected_outcome = OneHotEncoder().partial_fit(self.X).transform(self.X)
+
+        chunked = OneHotEncoder()
+        for row_chunk in batched(self.X,2):
+            chunked.partial_fit(row_chunk)
+
+        np.testing.assert_array_equal(chunked.transform(self.X), expected_outcome)
 
 
 class TestSimpleImputer(unittest.TestCase):
@@ -149,6 +205,40 @@ class TestSimpleImputer(unittest.TestCase):
     def test_non_numeric_fill_value_raises(self):
         with self.assertRaises(TypeError):
             SimpleImputer(fill_value="missing")
+
+
+    """ Partial fit tests"""
+    def test_partial_fit_input_not_modified(self):
+
+        ## Input not modified
+        X = np.array([[1.0, np.nan], [3.0, 4.0]])
+
+        for row_chunk in batched(X,2):
+            not_modified = SimpleImputer().partial_fit(row_chunk).transform(row_chunk)
+
+        self.assertTrue(np.isnan(X[0, 1]))
+
+    def test_partial_fit_nan_replaced_with_fill_value(self):
+
+        X = np.array([[1.0, np.nan], [3.0, 4.0]])
+
+        for row_chunk in batched(X, 2):
+            fill = SimpleImputer(fill_value=-1).partial_fit(row_chunk).transform(row_chunk)
+
+        np.testing.assert_array_equal(fill, [[1.0, -1.0], [3.0, 4.0]])
+
+
+    def test_chunk_invariance(self):
+
+        X = np.array([[1.0, np.nan], [np.nan, 4.0]])
+
+        whole = SimpleImputer(fill_value=-1).partial_fit(X).transform(X)
+
+        for row_chunk in batched(X, 2):
+            fill = SimpleImputer(fill_value=-1).partial_fit(row_chunk).transform(row_chunk)
+
+        np.testing.assert_array_equal(fill, whole)
+
 
 
 
