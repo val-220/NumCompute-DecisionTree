@@ -125,7 +125,7 @@ class StreamMetrics:
     self.y_true_chunks = []
     self.y_pred_chunks = []
   
-  def accuracy(self, y_pred, y_true):
+  def accuracy(self, y_true, y_pred):
     """
       Determines the accuracy, percentage of correctly predicted labels
       Parameters:
@@ -144,7 +144,7 @@ class StreamMetrics:
     return np.divide(np.sum(np.where(y_pred ==y_true,1,0)),y_true.size)
     
 
-  def precision(self, y_pred, y_true, pred_class=1):
+  def precision(self, y_true, y_pred, pred_class=1):
     """
       Determines the precision, the number of correctly predicted true labels divied by total number of predicted true labels
       Parameters:
@@ -171,7 +171,7 @@ class StreamMetrics:
     return np.divide(np.sum(y_pred[pos_index] == y_true[pos_index]), y_pred[pos_index].size)
 
 
-  def recall(self, y_pred, y_true, pred_class=1):
+  def recall(self, y_true, y_pred, pred_class=1):
     """
       Determines to recall, the number of correctly predicted positive labels divied by the number of true positive labels
       Parameters:
@@ -200,7 +200,7 @@ class StreamMetrics:
     return np.divide(np.sum(y_pred[pos_index] == y_true[pos_index]), y_true[pos_index].size)  
 
 
-  def f1score(self, y_pred, y_true, pred_class=1):
+  def f1score(self, y_true, y_pred, pred_class=1):
     """
     F1 score, which combines precision and recall to evaluate the model on 
       a range of [0,1].
@@ -234,7 +234,7 @@ class StreamMetrics:
 
 
 
-  def confusion_matrix(self, y_pred, y_true, pred_class=1):
+  def confusion_matrix(self, y_true, y_pred, pred_class=1):
     """
       Confusion matrix, determines the confusion matrix which is the number of true/false pos/neg results
       Parameters:
@@ -270,7 +270,7 @@ class StreamMetrics:
     false_neg = np.count_nonzero(y_pred[pred_neg] != y_true[pred_neg])
     return (true_pos,false_pos,true_neg,false_neg)
 
-  def MSE(self, y_pred_chunk, y_true_chunk):
+  def MSE(self, y_true_chunk, y_pred_chunk, ):
     """
     The Mean Squared Error (MSE), which evaluates the model by calculating
       the average squared difference between the predicted values and the target
