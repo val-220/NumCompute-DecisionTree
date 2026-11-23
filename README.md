@@ -59,7 +59,7 @@ X = SimpleImputer(fill_value=0.0).fit_transform(X)
 X_scaled = StandardScaler().fit_transform(X)
 ```
 
-For a full walkthrough of every module, open [`demo/quickstart.ipynb`](demo/quickstart.ipynb) and choose the `.venv` Python as the kernel. If VS Code asks to install `ipykernel`, accept.
+For a full walkthrough of every module, open [`demo/stream_demo.ipynb`](demo/stream_demo.ipynb) and choose the `.venv` Python as the kernel. If VS Code asks to install `ipykernel`, accept.
 
 ## Running the tests
 
@@ -92,7 +92,7 @@ Run both `ruff format` and `ruff check` before committing.
 - **Fitted attributes:** anything learned in `fit` ends with `_` (e.g. `self.mean_`) and is created only inside `fit`. Call `check_is_fitted` at the start of `transform` and `predict`.
 - **Private helpers:** functions used only inside one module start with `_` (e.g. `_check_inputs`).
 - **Docstrings:** include Parameters, Returns, Raises, and Time and Space Complexity (see `preprocessing.py`).
-- **Quickstart notebook:** add a short section for your module to `demo/quickstart.ipynb`. Clear all outputs before committing to avoid merge conflicts.
+- **Quickstart notebook:** add a short section for your module to `demo/stream_demo.ipynb`. Clear all outputs before committing to avoid merge conflicts.
 
 ## Adding dependencies
 
