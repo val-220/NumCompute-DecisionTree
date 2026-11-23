@@ -82,6 +82,8 @@ class DecisionTreeClassifier:
 
             Returns: The numerical gain
 
+            Time Complexity: O(n)
+
         """
         before = gini(y)
         after = (mask.sum() * gini(y[mask])

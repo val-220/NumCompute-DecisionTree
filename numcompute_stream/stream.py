@@ -1,7 +1,10 @@
 import logging
-import tracemalloc
+
+import numpy as np
 
 from numcompute_stream import StreamMetrics
+
+from numcompute_stream import Pipeline
 
 
 class StreamTrainer:
@@ -11,10 +14,9 @@ class StreamTrainer:
 
     def __init__(self, model, pipeline):
         self.model = model
-        self.pipeline = pipeline  # list of (name, transformer) or None
+        self.pipeline = pipeline  # Pipeline object
         self.metrics = StreamMetrics()
         self.logger = logging.getLogger(__name__)
-        self.history = []  # list of per-chunk dicts
         self.cumulative_accuracy = 0  # for cumulative accuracy
 
     def fit_chunk(self, X, y):
@@ -25,22 +27,29 @@ class StreamTrainer:
             X : The features that are inputed into the data
             y : Labels/ target variables of those features.
 
-        Returns: Nothing
+        Returns: Fitted model to the inputted chunk
 
-        Raises: 
+        Raises:
+            ValueError: If chunks are empty or of an incorrect value
 
         Time Complexity: 
 
         Space Complexity: 
         """
-        tracemalloc.start()
-        Xt = self.pipeline.partial_fit_transform(X)
+
+        if X is not None and y is not None:
+            raise ValueError("Chunks are empty!")
+        x, y = np.array(X), np.array(y)
+
+        Xt = x if self.pipeline is None else self.pipeline.partial_fit_transform(X)
         self.model.partial_fit(Xt, y)
-        tracemalloc.stop()
-        self.history.append(tracemalloc.get_traced_memory)
+
+        return self.model
 
     def score_chunk(self, X, y):
-        Xt = self.pipeline.transform(X)
+        x, y = np.array(X), np.array(y)
+
+        Xt = x if self.pipeline is None else self.pipeline.transform(X)
         y_pred = self.model.predict(Xt)
 
         self.metrics.update(y, y_pred)  # once

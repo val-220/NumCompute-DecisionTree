@@ -318,9 +318,9 @@ class Pipeline:
 
         return self.fit(X).transform(X)
 
-    def partial_fit_transform(self, X):
+    def partial_fit_transform(self, X, y=None):
 
-        return self.partial_fit(X).transform(X)
+        return self.partial_fit(X, y).transform(X)
 
     def predict(self, X):
         """

@@ -53,7 +53,7 @@ class StandardScaler:
         self.scale_ = None
         self.count = 0
 
-    def partial_fit(self, X):
+    def partial_fit(self, X, y=None):
         """
         Computes the per-feature mean and standard deviation via a
         running mean/variance using Welford's Algorithm
@@ -92,7 +92,7 @@ class StandardScaler:
 
         return self
 
-    def fit(self, X):
+    def fit(self, X, y=None):
         """
         Computes the per-feature mean and standard deviation.
 
@@ -210,7 +210,7 @@ class MinMaxScaler:
 
         self.feature_range = (low, high)
 
-    def fit(self, X):
+    def fit(self, X, y=None):
         """
         Computes the per-feature minimum, maximum and range.
 
@@ -243,7 +243,7 @@ class MinMaxScaler:
         return self
 
 
-    def partial_fit(self, X):
+    def partial_fit(self, X, y=None):
         """
         Computes the per-feature minimum, maximum and range via streaming.
 
