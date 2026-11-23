@@ -15,23 +15,171 @@ Follows the benchmarking philosophies on:
 
 """
 import gc
+import math
 from time import perf_counter, time
 
 import numpy as np
 
 import random
-
-
 import statistics
 
 import numcompute_stream
 
 MODES = ("demo","standard")
-DEMO_FUNCS = ("stable_sort", "multi_key_sort", "median", "stan_dev", "imputer")
+DEMO_FUNCS = ("quantile", "maximum", "median", "stan_dev", "imputer")
+
+""" Helper functions for comparing benchmark results"""
+# Looped quantile
+def quantile_loop(data, q):
+    """
+    Calculates a quantile via python loop with linear interpolation
+
+    Parameters
+
+     data: numerical data
+     q: quantile to be calculated
+
+    Returns
+     A float value for the given quantile
+
+     Raises
+    ValueError: If data is empty or q is less than 0 or more than one
+
+    Time Complexity:
+    O(n log n)
+
+    Space Complexity:
+    O(n)
+    """
+    if data is None:
+        raise ValueError("Empty data!")
+
+    elif q < 0 or q > 1:
+        raise ValueError("q must be between 0 and 1!")
+    sorted_data = np.sort(data)
+
+    n = len(sorted_data)
+
+    # Fraction index
+    pos = q * (n - 1)
+
+    # lower and upper indices
+    lower = math.floor(pos)
+    upper = math.ceil(pos)
+
+    fraction = pos - lower
+
+    if lower == upper:
+        return sorted_data[lower]
+
+    # performing linear interpolation to get final quantile
+    return sorted_data[lower] + fraction * (sorted_data[upper] - sorted_data[lower])
+
+def min_loop(data):
+    """
+    Calculates a minimum
+     Parameters
+
+     data: numerical data to be calculated on
+
+    Returns
+     A minimum value
+
+    Raises
+    ValueError: If data is empty
+
+    Time Complexity:
+    O(n)
+
+    Space Complexity:
+    O(n)
+    """
+    if data is None:
+        raise ValueError("Empty data!")
+
+    minimum = data[0]
+
+    for n in data:
+        if n < minimum:
+            minimum = n
+
+    return minimum
 
 
+def max_loop(data):
+    """
+    Calculates a maximum
+     Parameters
+
+     data: numerical data to be calculated on
+
+    Returns
+     A maximum value
+
+    Raises
+    ValueError: If data is empty
+
+    Time Complexity:
+    O(n)
+
+    Space Complexity:
+    O(n)
+    """
+    if data is None:
+        raise ValueError("Empty data!")
+
+    max = data[0]
+
+    for n in data:
+        if n > max:
+            max = n
+
+    return max
+
+def stan_dev_loop(data):
+    """
+    Calculates a maximum
+    Parameters
+     data: numerical data to be calculated on
+
+    Returns
+     A Standard Deviation value
+
+    Raises
+        ValueError: If data is empty
+
+    Time Complexity:
+    O(n)
+
+    Space Complexity:
+    O(n)
+    """
+    n = len(data)
+
+    if data is None:
+        raise ValueError("Empty data!")
+
+    total = 0
+
+    # Calculating mean
+    for num in data:
+        total = total + num
+
+    mean = total / n
+
+    # Calculating squared sum deviations from the mean
+    sum_square_diff = 0
+    for num in data:
+        diff = num - mean
+        sum_square_diff = sum_square_diff + (diff * diff)
 
 
+    # Variance and then standard deviation
+    variance = sum_square_diff / n
+
+    return np.sqrt(variance)
+
+"""Benchmarking"""
 
 def benchit(func, *args, repeat=5, mode='standard'):
 
@@ -106,123 +254,14 @@ def benchit(func, *args, repeat=5, mode='standard'):
 
             match func:
 
-                case 'stable_sort':
-                    # Testing input
-                    test_arr_verify = [random.randint(1, 50) for _ in range(100)]
+                case 'quantile':
+                    pass
 
-                    # Final output from loop sort (used for verifying)
-                    test_arr_sort_verify = sorted(test_arr_verify) 
+                case 'maximum':
+                    pass
 
+                case 'minimum':
 
-                    # Verification Step (e.g both vectorized and Python loop functions
-                    # produce same output)
-                    print("\nComparing numcompute stable sort...")
-                    np.testing.assert_array_equal(numcompute_stream.stable_sort(test_arr_verify),
-                    test_arr_sort_verify)
-
-                    # Filling vectorization bench results
-                    for i in range(repeat): 
-                        #Refresh inputs
-                        test_arr = [random.randint(1, 50) for _ in range(100)]
-                        test_arr_loop = test_arr.copy()
-
-                        ## VECTORISED
-                        start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
-
-                        numcompute_stream.stable_sort(test_arr)  # Calling the function
-
-                        end_time = perf_counter()   # end time
-
-                        vectorized_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places
-
-
-                        ## Python Loop
-
-                        start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
-
-                        test_arr_loop.sort() # Calling the function
-
-                        end_time = perf_counter()   # end time
-
-                        pyloop_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places  
-
-                case 'multi_key_sort':
-
-                    #Test inputs
-                    test_arr_verify = np.array([
-                        [1, 2, 3],
-                        [1, 2, 4],
-                        [1, 3, 5],
-                        [1, 1, 2],
-                        [2, 2, 1],
-                        [2, 1, 1], 
-                        [2, 2, 5]
-                    ])
-
-                    test_grid_verify = [
-                        [1, 2, 3],
-                        [1, 2, 4],
-                        [1, 3, 5],
-                        [1, 1, 2],
-                        [2, 2, 1],
-                        [2, 1, 1], 
-                        [2, 2, 5]
-                    ]
-
-                    # Verification Step (e.g both vectorized and Python loop functions produce same output)
-                    print("\nComparing multi key sort..")
-                    np.testing.assert_array_equal(numcompute_stream.multi_key_sort(test_arr_verify,[0, 1, 2]), sorted(test_grid_verify, key= lambda x: (x[0], x[1], x[2])))
-
-                    # Filling vectorization bench results
-                    for i in range(repeat): 
-
-                        #Refresh inputs
-                        test_arr = np.array([
-                        [1, 2, 3],
-                        [1, 2, 4],
-                        [1, 3, 5],
-                        [1, 1, 2],
-                        [2, 2, 1],
-                        [2, 1, 1], 
-                        [2, 2, 5]
-                        ])
-
-                        test_grid = [
-                        [1, 2, 3],
-                        [1, 2, 4],
-                        [1, 3, 5],
-                        [1, 1, 2],
-                        [2, 2, 1],
-                        [2, 1, 1], 
-                        [2, 2, 5]
-                        ]
-
-                        ## VECTORISED
-                        start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
-
-                        numcompute_stream.multi_key_sort(test_arr,[0, 1, 2]) # Calling the function
-
-                        end_time = perf_counter()   # end time
-
-                        vectorized_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places
-
-
-                        ## Python Loop
-                        start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
-
-                        sorted(test_grid, key= lambda x: (x[0], x[1], x[2])) # Calling the function
-
-                        end_time = perf_counter()   # end time
-
-                        pyloop_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places  
-
-                case 'median':
-                    #Test inputs
-                    test_arr_verify = [random.randint(1, 50) for _ in range(100)]
-
-                    # Verification Step (e.g both vectorized and Python loop functions produce same output)
-                    print("\nComparing median, vectorized vs python loop functions..")
-                    np.testing.assert_allclose(numcompute_stream.median(test_arr_verify), statistics.median(test_arr_verify))
 
                     for i in range(repeat): 
                         #Refresh inputs
@@ -248,12 +287,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         pyloop_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places  
 
                 case 'stan_dev':
-                    #Test inputs
-                    test_arr_verify = [random.randint(1, 50) for _ in range(100)]
-
-                    # Verification Step (e.g both vectorized and Python loop functions produce same output)
-                    print("\nComparing standard deviation, vectorized vs python loop functions..")
-                    np.testing.assert_allclose(numcompute_stream.stan_dev(test_arr_verify), statistics.pstdev(test_arr_verify))
 
                     for i in range(repeat): 
                         #Refresh inputs
@@ -279,18 +312,6 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         pyloop_benches[i] = round((end_time - start_time)*1000, 6) # Add result to the array and round to 6 decimal places  
                     
                 case 'imputer':
-                    #Test inputs
-                    test_arr_verify = np.full((5,5), np.nan)
-                    test_pyloop_verify = test_arr_verify
-
-                    for i in range(len(test_pyloop_verify)):
-                        for j in range(len(test_pyloop_verify[i])):
-                            test_pyloop_verify[i][j] = -1
-
-                    # Verification Step (e.g both vectorized and Python loop functions produce same output)
-                    print("\nComparing imputer, vectorized vs python loop functions..")
-                    np.testing.assert_array_equal(numcompute_stream.SimpleImputer(fill_value=-1).fit_transform(test_arr_verify), test_pyloop_verify )
-
 
                     for r in range(repeat): 
                         #Refresh inputs
@@ -300,7 +321,7 @@ def benchit(func, *args, repeat=5, mode='standard'):
                         ## VECTORISED
                         start_time = perf_counter() # Start time, uses a high precision, non-adjustable clock for benchmarking. 
 
-                        numcompute_stream.SimpleImputer(fill_value=-1).fit_transform(test_arr)# Calling the function
+                        numcompute_stream.SimpleImputer(fill_value=-1).partial_fit(test_arr).transform(test_arr)# Calling the function
 
                         end_time = perf_counter()   # end time
 

@@ -101,6 +101,8 @@ class StreamStats:
                 O(1)
 
         """
+        chunk_x = np.asarray(chunk_x, dtype=float)
+
         if chunk_x.size == 0:
             return
         else:
@@ -155,6 +157,7 @@ class StreamQuantileP2:
     
     def update(self, chunk_x):
         """ Runs the P2 algorithm and saves the result"""
+        chunk_x = np.asarray(chunk_x, dtype=float)
         chunk_x = chunk_x[~np.isnan(chunk_x)]
         for x in chunk_x:
             self.add(x)
