@@ -15,7 +15,7 @@
 import numpy as np
 
 
-def load_csv(csv_path, file_delimiter=","):
+def load_csv(csv_path, file_delimiter=",", skip_header = 0):
 
     """
         Loads a CSV file and returns it as an NumPy array.
@@ -64,6 +64,7 @@ def load_csv(csv_path, file_delimiter=","):
         dtype=float,
         delimiter=file_delimiter,
         filling_values=np.nan,
+        skip_header=skip_header,
         ndmin=2
     )
 
