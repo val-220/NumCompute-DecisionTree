@@ -184,6 +184,8 @@ class MinMaxScaler:
       - `transform(X) -> X_out`: Uses the stored values from fit(X) to scale
          data into configured target range.
 
+      - `partial_fit(X) -> self`: computes the per-feature minimum and maximum via streaming
+
       - `fit_transform(X) -> X_out`: fits the transformer to X, then transforms
          using the learned state.
     """
@@ -346,6 +348,9 @@ class OneHotEncoder:
       - `transform(X) -> X_out`: Uses the learned categories from fit(X)
          to transform input data into indicator columns for each categorical
          feature.
+
+      - `partial_fit(X) -> self`: Implements streaming by incrementally increasing
+        expanding categories
 
       - `fit_transform(X) -> X_out`: fits the transformer to X, then
          transforms using the learned state.
@@ -525,6 +530,9 @@ class SimpleImputer:
          learned, since the fill value is a constant.
 
       - `transform(X) -> X_out`: replaces every NaN in X with fill_value.
+
+      - `partial_fit(X) -> self`: Implements streaming by updating missing-value
+        estimates on the fly
 
       - `fit_transform(X) -> X_out`: fits the transformer to X, then
          transforms using the learned state.
